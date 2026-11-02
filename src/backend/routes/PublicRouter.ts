@@ -298,6 +298,7 @@ export class PublicRouter {
         '/shareLogin',
         '/admin',
         '/duplicates',
+        '/encryption',
         '/faces',
         '/albums',
         '/search*',

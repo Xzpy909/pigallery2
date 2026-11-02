@@ -24,6 +24,7 @@ import {NgIconComponent} from '@ng-icons/core';
 import {FormsModule} from '@angular/forms';
 import {GalleryService} from '../gallery/gallery.service';
 import {UploaderService} from '../gallery/uploader/uploader.service';
+import {entriesFromPicker} from '../gallery/uploader/dropped-files';
 import {SearchQueryUtils} from '../../../../common/SearchQueryUtils';
 
 @Component({
@@ -58,6 +59,7 @@ export class FrameComponent {
   themeService = inject(ThemeService);
   galleryService = inject(GalleryService);
   uploadService = inject(UploaderService);
+  protected readonly entriesFromPicker = entriesFromPicker;
 
   readonly showSearch = input(false);
   readonly showShare = input(false);

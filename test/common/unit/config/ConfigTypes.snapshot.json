@@ -243,6 +243,7 @@
   "Upload": "config",
   "Upload.blockedExtensions": "array<string>",
   "Upload.enabled": "boolean",
+  "Upload.encryptNewUploads": "boolean",
   "Upload.enforcedDirectoryConfig": "boolean",
   "Upload.minimumRole": "enum:LimitedGuest,Guest,User,Admin,Developer",
   "Users": "config",

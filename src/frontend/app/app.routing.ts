@@ -67,6 +67,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'encryption',
+    loadComponent: () => import('./ui/encryption/encryption.component').then(m => m.EncryptionComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'albums',
     loadComponent: () => import('./ui/albums/albums.component').then(m => m.AlbumsComponent),
     data: {preload: true},

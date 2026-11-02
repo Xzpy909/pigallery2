@@ -11,6 +11,7 @@ import {Logger} from '../../Logger';
 import {FileCrypto} from './FileCrypto';
 import {DecryptedFileServer} from './DecryptedFileServer';
 import {DecryptedLoopbackServer} from './DecryptedLoopbackServer';
+import {SupportedFormats} from '../../../common/SupportedFormats';
 
 const LOG_TAG = '[EncryptionManager]';
 
@@ -216,6 +217,26 @@ export class EncryptionManager {
   public static setLockedForTesting(unlockUser = 'test'): void {
     EncryptionManager.masterKey = null;
     EncryptionManager.meta = {version: 2, unlockUser, kdf: 'scrypt', salt: '', N: 0, r: 0, p: 0, wrappedKey: ''};
+  }
+
+  /**
+   * The files of the photo folder that are encrypted: media, meta files and sidecars.
+   */
+  public static isTargetFile(fileName: string): boolean {
+    const ext = path.extname(fileName).toLowerCase();
+    return SupportedFormats.WithDots.Photos.includes(ext) ||
+      SupportedFormats.WithDots.Videos.includes(ext) ||
+      SupportedFormats.WithDots.MetaFiles.includes(ext) ||
+      ext === '.xmp'; // sidecars
+  }
+
+  /**
+   * Thumbnails, converted videos and face thumbnails are regenerated (encrypted) on demand.
+   */
+  public static async deleteGeneratedFiles(): Promise<void> {
+    for (const folder of [ProjectPath.TranscodedFolder, ProjectPath.FacesFolder]) {
+      await fsp.rm(folder, {recursive: true, force: true});
+    }
   }
 
   public static async isEncrypted(filePath: string): Promise<boolean> {

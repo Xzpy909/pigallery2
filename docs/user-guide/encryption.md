@@ -32,8 +32,22 @@ Use a long, random password (at least 8 characters are required).
 
 ## Setting it up
 
-1. Start the gallery, create your real admin account, and delete the default `admin` account.
-   Log in once to check that it works. (Use the account whose password should unlock the gallery.)
+There are two ways: from the web UI (easiest), or with a command line tool.
+
+### From the web UI
+
+1. Create your real admin account, delete the default `admin`, and log in with the new account.
+2. **Back up your photo folder.**
+3. Open the menu, `Encrypt media files`. Confirm your password and press `Encrypt everything`.
+   The password is checked against your account, then it becomes the key of the gallery. A background job
+   (`Media encryption`, also listed in the settings under Jobs) encrypts the files with a progress log.
+4. Later, new files copied into the photo folder directly are encrypted by the same page
+   (`Encrypt files that are not encrypted yet`). Uploads through the app are encrypted automatically.
+
+### With the command line tool
+
+1. Create your real admin account, delete the default `admin` account, and check that you can log in.
+   (Use the account whose password should unlock the gallery.)
 2. Stop the server and **back up your photo folder**.
 3. Encrypt the existing files. This replaces the files one by one, and checks each encrypted copy
    by decrypting it again before it replaces the original. The tool asks for the login password of that user (hidden):
@@ -56,7 +70,7 @@ Use a long, random password (at least 8 characters are required).
 With Docker, stop the container and run the tool in a one-off container, for example:
 `docker compose run --rm -it --entrypoint node pigallery2 ./src/backend/tools/EncryptGallery --config-path=/app/data/config/config.json --user=<name> --apply`
 
-New uploads are encrypted before they reach the disk.
+New uploads are encrypted before they reach the disk (the `Upload` / `Encrypt new uploads` setting, on by default; if you switch it off, uploads are saved plain until you run `Encrypt media files`).
 Files that are not encrypted yet are still shown, so you can start the server before the tool has finished.
 
 ## Behavior

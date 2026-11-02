@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import {promises as fsp} from 'fs';
 import * as path from 'path';
 import {ProjectPath} from '../ProjectPath';
-import {SupportedFormats} from '../../common/SupportedFormats';
 import {EncryptionManager} from '../model/encryption/EncryptionManager';
 import {SQLConnection} from '../model/database/SQLConnection';
 import {UserManager} from '../model/database/UserManager';
@@ -32,29 +31,14 @@ const getArg = (name: string): string | undefined => {
   return args[i].includes('=') ? args[i].substring(args[i].indexOf('=') + 1) : args[i + 1];
 };
 
-const isTargetFile = (name: string): boolean => {
-  const ext = path.extname(name).toLowerCase();
-  return SupportedFormats.WithDots.Photos.includes(ext) ||
-    SupportedFormats.WithDots.Videos.includes(ext) ||
-    SupportedFormats.WithDots.MetaFiles.includes(ext) ||
-    ext === '.xmp'; // sidecars
-};
-
 const walk = async function* (dir: string): AsyncGenerator<string> {
   for (const entry of await fsp.readdir(dir, {withFileTypes: true})) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       yield* walk(full);
-    } else if (entry.isFile() && isTargetFile(entry.name)) {
+    } else if (entry.isFile() && EncryptionManager.isTargetFile(entry.name)) {
       yield full;
     }
-  }
-};
-
-const wipeGeneratedFiles = async (): Promise<void> => {
-  // thumbnails, converted videos and face thumbnails are regenerated on demand
-  for (const folder of [ProjectPath.TranscodedFolder, ProjectPath.FacesFolder]) {
-    await fsp.rm(folder, {recursive: true, force: true});
   }
 };
 
@@ -173,7 +157,7 @@ const fail = (message: string): never => {
   }
 
   if (apply) {
-    await wipeGeneratedFiles();
+    await EncryptionManager.deleteGeneratedFiles();
   }
   console.log((apply ? '' : 'Would be ') + (decrypt ? 'decrypted' : 'encrypted') + ': ' + counts.changed +
     ', already in the right state: ' + counts.skipped + ', failed: ' + counts.failed);

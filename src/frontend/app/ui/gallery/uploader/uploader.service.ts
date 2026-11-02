@@ -10,6 +10,7 @@ import {AuthenticationService} from '../../../model/network/authentication.servi
 import {NotificationService} from '../../../model/notification.service';
 import {PG2ConfMap} from '../../../../../common/PG2ConfMap';
 import {ToastRef, ToastService, ToastSummary} from '../../toast/toast.service';
+import {collectEntries, DroppedRoots, UploadEntry} from './dropped-files';
 
 // A file while it is queued or uploading. Its toast shows the progress.
 export interface UploadProgress {
@@ -23,6 +24,7 @@ export interface UploadProgress {
 interface QueuedUpload {
   file: File;
   directory: string;
+  relativeDir: string;
   progressItem: UploadProgress;
 }
 
@@ -92,20 +94,31 @@ export class UploaderService {
 
 
   public async uploadFiles(filesIn: FileList | File[]): Promise<void> {
+    return this.uploadEntries(Array.from(filesIn).map(file => ({file, relativeDir: ''})));
+  }
+
+  /** Dropped files and folders. */
+  public async uploadDropped(roots: DroppedRoots): Promise<void> {
     if (this.canUpload() === false) {
       this.notificationService.error($localize`Upload is not supported for this directory.`);
       return;
     }
-    const files = [];
-    for (let i = 0; i < filesIn.length; i++) {
-      files.push(filesIn[i]);
+    return this.uploadEntries(await collectEntries(roots));
+  }
+
+  /** Files with the folder they are in: the folders are created in the current directory. */
+  public async uploadEntries(entriesIn: UploadEntry[]): Promise<void> {
+    if (this.canUpload() === false) {
+      this.notificationService.error($localize`Upload is not supported for this directory.`);
+      return;
     }
     const dirDto = this.contentLoaderService.content.value.directory;
     const directory = Utils.concatUrls(dirDto.path, dirDto.name);
-    const supportedFiles = files.filter(f =>
-      UploadUtils.isUploadableExtension(UploadUtils.getExtension(f.name), Config.Upload.blockedExtensions));
+    const supportedEntries = entriesIn.filter(e =>
+      UploadUtils.isUploadableExtension(UploadUtils.getExtension(e.file.name), Config.Upload.blockedExtensions));
+    const supportedFiles = supportedEntries.map(e => e.file);
 
-    if (supportedFiles.length < files.length) {
+    if (supportedEntries.length < entriesIn.length) {
       this.notificationService.warning($localize`Some files were skipped due to unsupported format.`);
     }
 
@@ -117,11 +130,13 @@ export class UploaderService {
     const progressItems: UploadProgress[] = [];
     const existingFiles: File[] = [];
 
-    for (const f of supportedFiles) {
-      // Check if the file already exists in the current directory
+    for (const entry of supportedEntries) {
+      const f = entry.file;
+      const displayName = entry.relativeDir ? entry.relativeDir + '/' + f.name : f.name;
+      // Check if the file already exists in the current directory (files in new folders are checked by the server)
       const dir = this.contentLoaderService.content.value.directory;
       let fileExists = false;
-      if (dir) {
+      if (dir && !entry.relativeDir) {
         fileExists = (dir.media && dir.media.some(m => m.name === f.name)) ||
           (dir.metaFile && dir.metaFile.some(m => m.name === f.name));
       }
@@ -130,7 +145,7 @@ export class UploaderService {
         existingFiles.push(f);
       } else {
         const progressItem: UploadProgress = {
-          name: f.name,
+          name: displayName,
           progress: 0,
           status: 'queued',
           toast: null
@@ -138,7 +153,7 @@ export class UploaderService {
         progressItem.toast = this.toastService.open({
           type: 'progress',
           color: 'secondary',
-          title: f.name,
+          title: displayName,
           text: $localize`Queued`,
           progress: 0,
           group: UploaderService.TOAST_GROUP,
@@ -150,6 +165,7 @@ export class UploaderService {
         this.uploadQueue.push({
           file: f,
           directory,
+          relativeDir: entry.relativeDir,
           progressItem
         });
       }
@@ -224,11 +240,13 @@ export class UploaderService {
   }
 
   private _uploadFile(upload: QueuedUpload): void {
-    const {file, directory, progressItem} = upload;
+    const {file, directory, relativeDir, progressItem} = upload;
     progressItem.status = 'uploading';
     progressItem.toast.update({color: undefined, text: '0%'});
 
     const formData = new FormData();
+    // before the file: the server creates this folder inside the directory
+    formData.append('relativeDir', relativeDir || '');
     formData.append('files', file);
 
     const url = '/upload/' + (directory || '');
@@ -247,8 +265,15 @@ export class UploaderService {
           const response = event.body as any;
           const serverErrors = (response && response.result) ? response.result : [];
 
-          const serverError = serverErrors.find((e: any) => e.filename === progressItem.name);
-          if (serverError) {
+          const serverError = serverErrors.find((e: any) => e.filename === file.name);
+          if (serverError && /already exists/i.test(serverError.error)) {
+            // merging into an existing folder: files that exist stay as they are
+            progressItem.toast.update({
+              type: 'warning', color: undefined, text: $localize`File already exists`, progress: 100,
+              timeout: ToastService.TIMEOUT, closable: true, onCancel: undefined
+            });
+            this.onUploadFinished(progressItem);
+          } else if (serverError) {
             this.onUploadFailed(progressItem, serverError.error);
           } else {
             this.batchUploaded++;

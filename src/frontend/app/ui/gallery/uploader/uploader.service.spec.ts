@@ -14,9 +14,14 @@ import {UserRoles} from '../../../../../common/entities/UserDTO';
 class MockNetworkService {
   requests: Subject<unknown>[] = [];
 
-  postFormData(): Subject<unknown> {
+  forms: FormData[] = [];
+  urls: string[] = [];
+
+  postFormData(url?: string, form?: FormData): Subject<unknown> {
     const request = new Subject<unknown>();
     this.requests.push(request);
+    this.forms.push(form);
+    this.urls.push(url);
     return request;
   }
 }
@@ -162,5 +167,39 @@ describe('UploaderService', () => {
     expect(network.requests.length).toBe(0);
     await vi.advanceTimersByTimeAsync(ToastService.TIMEOUT);
     expect(toast('exists.jpg')).toBeUndefined();
+  });
+
+  it('should send the folder of a file, and show it in the title', async () => {
+    vi.useFakeTimers();
+    service.uploadEntries([
+      {file: file('a.jpg'), relativeDir: 'Holiday/Day 1'},
+      {file: file('b.jpg'), relativeDir: ''},
+    ]);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(toast('Holiday/Day 1/a.jpg')).toBeDefined();
+    expect(network.forms[0].get('relativeDir')).toBe('Holiday/Day 1');
+    expect((network.forms[0].get('files') as File).name).toBe('a.jpg');
+    expect(network.urls[0]).toContain('Balaton');
+  });
+
+  it('should not skip a file in a new folder only because the current directory has one with the same name', async () => {
+    vi.useFakeTimers();
+    service.uploadEntries([{file: file('exists.jpg'), relativeDir: 'New'}]);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(network.requests.length).toBe(1);
+  });
+
+  it('should treat a file that exists on the server as skipped, not failed', async () => {
+    vi.useFakeTimers();
+    service.uploadEntries([{file: file('a.jpg'), relativeDir: 'Old'}]);
+    await vi.advanceTimersByTimeAsync(0);
+    network.requests[0].next({
+      type: HttpEventType.Response,
+      body: {result: [{filename: 'a.jpg', error: 'File already exists: /x/a.jpg'}]}
+    });
+    network.requests[0].complete();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(toast('Old/a.jpg')).toEqual(expect.objectContaining({type: 'warning'}));
+    expect(notification.error).not.toHaveBeenCalled();
   });
 });
