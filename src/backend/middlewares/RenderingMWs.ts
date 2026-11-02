@@ -12,6 +12,8 @@ import {TAGS} from '../../common/config/public/ClientConfig';
 import {ExtensionConfigWrapper} from '../model/extension/ExtensionConfigWrapper';
 import {SharingEntity} from '../model/database/enitites/SharingEntity';
 import {Config} from '../../common/config/private/Config';
+import {EncryptionManager} from '../model/encryption/EncryptionManager';
+import * as path from 'path';
 
 const forcedDebug = process.env['NODE_ENV'] === 'debug';
 
@@ -93,7 +95,7 @@ export class RenderingMWs {
     req: Request,
     res: Response,
     next: NextFunction
-  ): void {
+  ): Promise<void> {
     return RenderingMWs.sendFile(req, res, next, 'private, max-age=86400');
   }
 
@@ -105,7 +107,7 @@ export class RenderingMWs {
     req: Request,
     res: Response,
     next: NextFunction
-  ): void {
+  ): Promise<void> {
     return RenderingMWs.sendFile(req, res, next, 'private, no-cache');
   }
 
@@ -116,20 +118,32 @@ export class RenderingMWs {
     req: Request,
     res: Response,
     next: NextFunction
-  ): void {
+  ): Promise<void> {
     return RenderingMWs.sendFile(req, res, next, 'no-store');
   }
 
-  private static sendFile(
+  private static async sendFile(
     req: Request,
     res: Response,
     next: NextFunction,
     cacheControl: string
-  ): void {
+  ): Promise<void> {
     if (!req.resultPipe) {
       return next();
     }
-    return res.sendFile(req.resultPipe as string, {
+    const filePath = req.resultPipe as string;
+    // encrypted files are decrypted while they are streamed to the client, nothing is written to the disk
+    if (await EncryptionManager.isEncrypted(filePath)) {
+      try {
+        res.type(path.extname(filePath));
+        res.setHeader('Cache-Control', cacheControl);
+        await EncryptionManager.serve(req, res, filePath);
+        return;
+      } catch (err) {
+        return next(new ErrorDTO(ErrorCodes.GENERAL_ERROR, 'Error during sending an encrypted file', err));
+      }
+    }
+    return res.sendFile(filePath, {
       cacheControl: false,
       // only set on a successful transfer, so errors are not cached
       headers: {'Cache-Control': cacheControl},

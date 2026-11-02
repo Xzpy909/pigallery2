@@ -45,6 +45,7 @@ nav:
   - User Guide:
       - Configuration: user-guide/configuration.md
       - User Rights: user-guide/user-rights.md
+      - Encryption: user-guide/encryption.md
   - Development:
       - Contributing: development/contributing.md
       - Docker Development: development/docker-contributing.md

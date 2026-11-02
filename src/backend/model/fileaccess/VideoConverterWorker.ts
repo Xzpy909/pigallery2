@@ -4,6 +4,7 @@ import {FfmpegCommand} from 'fluent-ffmpeg';
 import {FFmpegFactory} from '../FFmpegFactory';
 import {FFmpegPresets, videoCodecType, videoFormatType, videoResolutionType,} from '../../../common/config/private/PrivateConfig';
 import {ExtensionDecorator} from '../extension/ExtensionDecorator';
+import {EncryptionManager} from '../encryption/EncryptionManager';
 
 export interface VideoConverterInput {
   videoPath: string;
@@ -29,12 +30,35 @@ export class VideoConverterWorker {
   @ExtensionDecorator(e => e.gallery.VideoConverter.convert)
   public static async convert(input: VideoConverterInput): Promise<void> {
     const origPath = input.output.path;
+    if (EncryptionManager.isEnabled()) {
+      // ffmpeg can only write mp4 to a seekable plain file. It is kept in the scratch folder
+      // (set it to a RAM disk to keep it off the disk), only for the time of the transcoding.
+      const scratchPath = await EncryptionManager.getScratchPath('.part');
+      input.output.path = scratchPath;
+      try {
+        await this._convert(input);
+        await EncryptionManager.encryptFileTo(scratchPath, origPath);
+      } finally {
+        await EncryptionManager.shred(scratchPath);
+      }
+      return;
+    }
     input.output.path = origPath + '.part';
     await this._convert(input);
     await fsp.rename(input.output.path, origPath);
   }
 
-  private static _convert(input: VideoConverterInput): Promise<void> {
+  private static async _convert(input: VideoConverterInput): Promise<void> {
+    // encrypted videos are read through a loopback URL, so there is no decrypted copy on the disk
+    const source = await EncryptionManager.getFfmpegInput(input.videoPath);
+    try {
+      await this.runFfmpeg(input, source.input);
+    } finally {
+      source.release();
+    }
+  }
+
+  private static runFfmpeg(input: VideoConverterInput, ffmpegSource: string): Promise<void> {
     if (this.ffmpeg == null) {
       this.ffmpeg = FFmpegFactory.get();
     }
@@ -42,7 +66,7 @@ export class VideoConverterWorker {
     return new Promise((resolve, reject) => {
       Logger.silly('[FFmpeg] transcoding video: ' + input.videoPath);
 
-      const command: FfmpegCommand = this.ffmpeg(input.videoPath);
+      const command: FfmpegCommand = this.ffmpeg(ffmpegSource);
       let executedCmd = '';
       command
           .on('start', (cmd: string) => {

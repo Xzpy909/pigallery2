@@ -18,6 +18,7 @@ import {SearchQueryDTO, SearchQueryTypes,} from '../../common/entities/SearchQue
 import {LocationLookupException} from '../exceptions/LocationLookupException';
 import {ServerTime} from './ServerTimingMWs';
 import {SortByTypes} from '../../common/entities/SortingMethods';
+import {EncryptionManager} from '../model/encryption/EncryptionManager';
 
 export class GalleryMWs {
   /**
@@ -189,7 +190,12 @@ export class GalleryMWs {
           usedNames.set(lowerName, 1);
         }
 
-        archive.file(mediaPath, {name: uniqueName});
+        if (await EncryptionManager.isEncrypted(mediaPath)) {
+          // the zip holds the plain files, they are decrypted while streamed into the archive
+          archive.append(EncryptionManager.createReadStream(mediaPath), {name: uniqueName});
+        } else {
+          archive.file(mediaPath, {name: uniqueName});
+        }
       }
 
       await archive.finalize();

@@ -15,6 +15,7 @@ import {Localizations} from './model/Localizations';
 import {CookieNames} from '../common/CookieNames';
 import {Router} from './routes/Router';
 import {PhotoProcessing} from './model/fileaccess/fileprocessing/PhotoProcessing';
+import {EncryptionManager} from './model/encryption/EncryptionManager';
 import {Event} from '../common/event/Event';
 import {QueryParams} from '../common/QueryParams';
 import {ConfigClassBuilder} from 'typeconfig/node';
@@ -104,6 +105,8 @@ export class Server {
       [Config.Server.apiPath + '/user/me', Config.Server.apiPath + '/share/:' + QueryParams.gallery.sharingKey_params],
     );
 
+    // fails closed: with encryption enabled the server does not start without the right key
+    await EncryptionManager.init();
     PhotoProcessing.init();
     Localizations.init();
 

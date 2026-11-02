@@ -4,6 +4,7 @@ import * as xml2js from 'xml2js';
 import {ProjectPath} from '../../../ProjectPath';
 import {Config} from '../../../../common/config/private/Config';
 import {SupportedFormats} from '../../../../common/SupportedFormats';
+import {EncryptionManager} from '../../encryption/EncryptionManager';
 
 type gpxEntry = { '$': { lat: string, lon: string }, ele?: string[], time?: string[], extensions?: unknown };
 
@@ -87,7 +88,7 @@ export class GPXProcessing {
     const outDir = path.dirname(outPath);
 
     await fsp.mkdir(outDir, {recursive: true});
-    const gpxStr = await fsp.readFile(filePath);
+    const gpxStr = await EncryptionManager.readFile(filePath);
     const gpxObj = await (new xml2js.Parser()).parseStringPromise(gpxStr);
 
     if (gpxObj.gpx?.trk?.[0].trkseg[0]) { // only compress paths if there is any
@@ -165,7 +166,7 @@ export class GPXProcessing {
         }
       }
     }
-    await fsp.writeFile(outPath, (new xml2js.Builder({renderOpts: {pretty: false}})).buildObject(gpxObj));
+    await EncryptionManager.writeFile(outPath, (new xml2js.Builder({renderOpts: {pretty: false}})).buildObject(gpxObj));
 
     return outPath;
   }
