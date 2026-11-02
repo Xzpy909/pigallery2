@@ -11,6 +11,7 @@ import {SQLConnection} from '../../../../../src/backend/model/database/SQLConnec
 import {UserEntity} from '../../../../../src/backend/model/database/enitites/UserEntity';
 import {VersionEntity} from '../../../../../src/backend/model/database/enitites/VersionEntity';
 import {TestHelper} from '../../../../TestHelper';
+import {EncryptionManager} from '../../../../../src/backend/model/encryption/EncryptionManager';
 
 chai.use(chaiAsPromised);
 
@@ -18,6 +19,7 @@ declare let describe: any;
 declare const it: any;
 declare const beforeEach: any;
 declare const after: any;
+declare const afterEach: any;
 const tmpDescribe = describe;
 describe = DBTestHelper.describe(); // fake it so the IDE plays nicely (recognize the test)
 
@@ -65,6 +67,45 @@ describe('UserManager', (sqlHelper: DBTestHelper) => {
         await expect(um.findOne({name: 'test', password: ''})).to.be.rejectedWith(Error);
       });
 
+    });
+
+    describe('encrypted gallery', async () => {
+      const key = Buffer.alloc(32, 3);
+      afterEach(() => EncryptionManager.setKeyForTesting(null));
+
+      it('should not delete the user whose password unlocks the gallery', async () => {
+        const um = new UserManager();
+        const u = await um.findOne({name: 'test'});
+        EncryptionManager.setKeyForTesting(key, 'test');
+        await expect(um.deleteUser(u.id)).to.be.rejectedWith('unlocks the encrypted gallery');
+        expect(await um.findOne({name: 'test'})).to.not.be.null;
+        EncryptionManager.setKeyForTesting(key, 'someone-else');
+        await um.deleteUser(u.id);
+        expect(await um.findOne({name: 'test'})).to.be.null;
+      });
+
+      it('should refuse a short new password for the unlock user and keep the old one', async () => {
+        const um = new UserManager();
+        const u = await um.findOne({name: 'test'});
+        EncryptionManager.setKeyForTesting(key, 'test');
+        await expect(um.updateSettings(u.id, {newPassword: 'short'})).to.be.rejectedWith('at least');
+        expect(await um.findOne({name: 'test', password: 'testp'})).to.not.be.null;
+      });
+
+      it('should refuse a password change while locked', async () => {
+        const um = new UserManager();
+        const u = await um.findOne({name: 'test'});
+        EncryptionManager.setLockedForTesting('test');
+        await expect(um.updateSettings(u.id, {newPassword: 'long enough password'})).to.be.rejectedWith('locked');
+      });
+
+      it('should let other users change their password freely', async () => {
+        const um = new UserManager();
+        const u = await um.findOne({name: 'test'});
+        EncryptionManager.setKeyForTesting(key, 'someone-else');
+        await um.updateSettings(u.id, {newPassword: 'x'});
+        expect(await um.findOne({name: 'test', password: 'x'})).to.not.be.null;
+      });
     });
 
     describe('oidc', async () => {

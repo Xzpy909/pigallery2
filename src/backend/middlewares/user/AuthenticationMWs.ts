@@ -12,6 +12,7 @@ import {SessionUser, SessionContext} from '../../model/SessionContext';
 import {Brackets} from 'typeorm';
 import {DirectoryAccess, DirectoryAccessTypes} from '../../model/DirectoryAccess';
 import {OIDCAuthService} from './OIDCAuthService';
+import {EncryptionManager} from '../../model/encryption/EncryptionManager';
 
 const LOG_TAG = 'AuthenticationMWs';
 
@@ -25,6 +26,11 @@ export class AuthenticationMWs {
     if (Config.Users.authenticationRequired === false) {
       const user = ObjectManagers.getInstance().UserManager.getUnAuthenticatedUser();
       req.session.context = await ObjectManagers.getInstance().SessionManager.buildContext(user);
+      return next();
+    }
+    if (EncryptionManager.isLocked()) {
+      // nobody is signed in until the unlock user logs in
+      delete req.session.context;
       return next();
     }
     try {
@@ -50,6 +56,13 @@ export class AuthenticationMWs {
       const user = ObjectManagers.getInstance().UserManager.getUnAuthenticatedUser();
       req.session.context = await ObjectManagers.getInstance().SessionManager.buildContext(user);
       return next();
+    }
+
+    if (EncryptionManager.isLocked()) {
+      // the gallery is encrypted and the key is only loaded when the unlock user logs in. Sharings can not work before.
+      delete req.session.context;
+      res.status(401);
+      return next(new ErrorDTO(ErrorCodes.NOT_AUTHENTICATED, 'The gallery is locked'));
     }
 
     try {
@@ -262,7 +275,8 @@ export class AuthenticationMWs {
     res: Response,
     next: NextFunction
   ): void {
-    if (typeof req.session.context?.user !== 'undefined') {
+    // a session that was made before a restart is useless while the gallery is locked
+    if (!EncryptionManager.isLocked() && typeof req.session.context?.user !== 'undefined') {
       return next(new ErrorDTO(ErrorCodes.ALREADY_AUTHENTICATED));
     }
     return next();
@@ -300,6 +314,18 @@ export class AuthenticationMWs {
         name: req.body.loginCredential.username,
         password: req.body.loginCredential.password,
       });
+      if (!user) {
+        throw new Error('No entry found');
+      }
+      if (EncryptionManager.isLocked()) {
+        await EncryptionManager.unlock(user.name, req.body.loginCredential.password);
+        if (EncryptionManager.isLocked()) {
+          Logger.warn(LOG_TAG, 'Login of `' + user.name + '` refused: the gallery is locked, only `' +
+            EncryptionManager.getUnlockUser() + '` can unlock it.');
+          return next(new ErrorDTO(ErrorCodes.NOT_AUTHENTICATED,
+            'The gallery is encrypted and locked. Only "' + EncryptionManager.getUnlockUser() + '" can unlock it by logging in.'));
+        }
+      }
       await AuthenticationMWs.startSession(req, user, req.body.loginCredential.rememberMe);
       return next();
     } catch (err) {
@@ -320,6 +346,10 @@ export class AuthenticationMWs {
     res: Response,
     next: NextFunction
   ): Promise<void> {
+    if (EncryptionManager.isLocked()) {
+      return next(new ErrorDTO(ErrorCodes.NOT_AUTHENTICATED,
+        'The gallery is encrypted and locked, log in with the password of "' + EncryptionManager.getUnlockUser() + '" first.'));
+    }
     try {
       const user = await OIDCAuthService.getUserFromAuthenticationResponse(req);
       await AuthenticationMWs.startSession(req, user, true);

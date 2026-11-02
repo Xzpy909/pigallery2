@@ -16,6 +16,7 @@ import {MetadataLoader} from './MetadataLoader';
 import {NotificationManager} from '../NotifocationManager';
 import {ExtensionDecorator} from '../extension/ExtensionDecorator';
 import {SessionManager} from '../database/SessionManager';
+import {EncryptionManager} from '../encryption/EncryptionManager';
 
 
 const LOG_TAG = '[DiskManager]';
@@ -138,6 +139,8 @@ export class DiskManager {
     relativeDirectoryName: string,
     settings: DirectoryScanSettings = {}
   ): Promise<ParentDirectoryDTO> {
+    // the per file error handling below skips files, a locked gallery must not look like an empty one
+    EncryptionManager.assertUnlocked();
     Logger.silly(LOG_TAG, 'scanning directory:', relativeDirectoryName);
     relativeDirectoryName = this.normalizeDirPath(relativeDirectoryName);
     if (!ProjectPath.isInsideImageFolder(relativeDirectoryName)) {

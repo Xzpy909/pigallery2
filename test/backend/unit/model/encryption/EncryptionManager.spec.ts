@@ -6,7 +6,7 @@ import * as path from 'path';
 import sharp from 'sharp';
 import {Config} from '../../../../../src/common/config/private/Config';
 import {ProjectPath} from '../../../../../src/backend/ProjectPath';
-import {EncryptionManager} from '../../../../../src/backend/model/encryption/EncryptionManager';
+import {EncryptionLockedError, EncryptionManager} from '../../../../../src/backend/model/encryption/EncryptionManager';
 import {MetadataLoader} from '../../../../../src/backend/model/fileaccess/MetadataLoader';
 import {PhotoProcessing} from '../../../../../src/backend/model/fileaccess/fileprocessing/PhotoProcessing';
 import {VideoConverterWorker} from '../../../../../src/backend/model/fileaccess/VideoConverterWorker';
@@ -41,9 +41,6 @@ describe('EncryptionManager', () => {
     ProjectPath.TranscodedFolder = path.join(ProjectPath.TempFolder, 'tc');
     ProjectPath.FacesFolder = path.join(ProjectPath.TempFolder, 'f');
     await fs.promises.mkdir(ProjectPath.TranscodedFolder, {recursive: true});
-    Config.Encryption.enabled = false;
-    Config.Encryption.passphrase = '';
-    Config.Encryption.keyFile = '';
     Config.Encryption.scratchFolder = path.join(root, 'scratch');
     EncryptionManager.setKeyForTesting(null);
   };
@@ -65,100 +62,128 @@ describe('EncryptionManager', () => {
   describe('key handling', () => {
     beforeEach(setup);
 
-    it('should not need a key while nothing is encrypted and encryption is off', async () => {
+    const metaPath = (): string => path.join(images, EncryptionManager.META_FILE_NAME);
+
+    it('should not be active and not need a key while there is no key file', async () => {
       await EncryptionManager.init();
+      expect(EncryptionManager.isEnabled()).to.be.false;
+      expect(EncryptionManager.isLocked()).to.be.false;
       expect(await EncryptionManager.isEncrypted(await copyAsset('test_png.png'))).to.be.false;
     });
 
-    it('should refuse to start with encryption enabled and no key (fails closed)', async () => {
-      Config.Encryption.enabled = true;
-      const e = await rejects(EncryptionManager.init());
-      expect(e.message).to.contain('no passphrase or key file');
-    });
-
-    it('should store the salt next to the images and accept the same passphrase again', async () => {
-      Config.Encryption.enabled = true;
-      Config.Encryption.passphrase = 'correct horse battery staple';
-      await EncryptionManager.init();
-      const metaPath = path.join(images, EncryptionManager.META_FILE_NAME);
-      const meta = JSON.parse(await fs.promises.readFile(metaPath, 'utf8'));
+    it('should wrap a random key with the password and never store the password or the key', async () => {
+      await EncryptionManager.setup('alice', 'correct horse battery staple');
+      const raw = await fs.promises.readFile(metaPath(), 'utf8');
+      const meta = JSON.parse(raw);
+      expect(meta.version).to.equal(2);
+      expect(meta.unlockUser).to.equal('alice');
       expect(meta.kdf).to.equal('scrypt');
       expect(meta.salt).to.have.length(32);
-      // the key itself is never stored
-      expect(JSON.stringify(meta)).to.not.contain('correct horse');
+      expect(raw).to.not.contain('correct horse');
+      // nonce + key + tag
+      expect(meta.wrappedKey).to.have.length((12 + 32 + 16) * 2);
+    });
 
-      await EncryptionManager.init(); // same passphrase, same meta
+    it('should start locked and unlock only with the password of the unlock user', async () => {
+      await EncryptionManager.setup('alice', 'correct horse battery staple');
       const photo = await copyAsset('test_png.png');
       await EncryptionManager.encryptFile(photo);
-      EncryptionManager.setKeyForTesting(null);
+
       await EncryptionManager.init();
+      expect(EncryptionManager.isEnabled()).to.be.true;
+      expect(EncryptionManager.isLocked()).to.be.true;
+      expect(EncryptionManager.getUnlockUser()).to.equal('alice');
+
+      expect(await EncryptionManager.unlock('bob', 'correct horse battery staple')).to.be.false;
+      expect(await EncryptionManager.unlock('alice', 'wrong password')).to.be.false;
+      expect(EncryptionManager.isLocked()).to.be.true;
+
+      expect(await EncryptionManager.unlock('alice', 'correct horse battery staple')).to.be.true;
+      expect(EncryptionManager.isLocked()).to.be.false;
       expect((await EncryptionManager.readFile(photo)).length).to.equal(
         (await fs.promises.readFile(path.join(ASSETS, 'test_png.png'))).length);
     });
 
-    it('should refuse a different passphrase instead of encrypting with a new key', async () => {
-      Config.Encryption.enabled = true;
-      Config.Encryption.passphrase = 'first';
-      await EncryptionManager.init();
-      Config.Encryption.passphrase = 'second';
-      const e = await rejects(EncryptionManager.init());
-      expect(e.message).to.contain('does not match');
-    });
-
-    it('should not be fooled by a different unicode form of the same passphrase', async () => {
-      Config.Encryption.enabled = true;
-      Config.Encryption.passphrase = 'café'; // precomposed
-      await EncryptionManager.init();
-      Config.Encryption.passphrase = 'café'; // decomposed
-      await EncryptionManager.init(); // must not throw
-    });
-
-    it('should work with a raw key file and refuse mixing it up with a passphrase', async () => {
-      const keyFile = path.join(root, 'key.txt');
-      await fs.promises.writeFile(keyFile, 'ab'.repeat(32) + '\n');
-      Config.Encryption.enabled = true;
-      Config.Encryption.keyFile = keyFile;
-      await EncryptionManager.init();
+    it('should fail clearly, not with empty data, while locked', async () => {
+      await EncryptionManager.setup('alice', 'correct horse battery staple');
       const photo = await copyAsset('test_png.png');
       await EncryptionManager.encryptFile(photo);
-      expect(await EncryptionManager.isEncrypted(photo)).to.be.true;
-
-      Config.Encryption.keyFile = '';
-      Config.Encryption.passphrase = 'some passphrase';
-      const e = await rejects(EncryptionManager.init());
-      expect(e.message).to.contain('raw key');
-    });
-
-    it('should read a passphrase from a text key file', async () => {
-      const keyFile = path.join(root, 'key.txt');
-      await fs.promises.writeFile(keyFile, 'my secret phrase\n');
-      Config.Encryption.enabled = true;
-      Config.Encryption.keyFile = keyFile;
       await EncryptionManager.init();
-      Config.Encryption.keyFile = '';
-      Config.Encryption.passphrase = 'my secret phrase';
-      await EncryptionManager.init(); // the same secret, so it matches
-    });
 
-    it('should fail clearly when an encrypted file is read without a key', async () => {
-      Config.Encryption.enabled = true;
-      Config.Encryption.passphrase = 'pw';
-      await EncryptionManager.init();
-      const photo = await copyAsset('test_png.png');
-      await EncryptionManager.encryptFile(photo);
-
-      EncryptionManager.setKeyForTesting(null);
       const e = await rejects(EncryptionManager.readFile(photo));
-      expect(e.message).to.contain('no encryption key');
+      expect(e).to.be.instanceOf(EncryptionLockedError);
+      expect(() => EncryptionManager.assertUnlocked()).to.throw(EncryptionLockedError);
+      // indexing must not turn a locked photo into an empty one
+      const e2 = await rejects(MetadataLoader.loadPhotoMetadata(photo));
+      expect(e2).to.be.instanceOf(EncryptionLockedError);
+    });
+
+    it('should not be fooled by a different unicode form of the same password', async () => {
+      await EncryptionManager.setup('alice', 'café password'); // precomposed
+      await EncryptionManager.init();
+      expect(await EncryptionManager.unlock('alice', 'café password')).to.be.true; // decomposed
+    });
+
+    it('should refuse short passwords and a second setup', async () => {
+      const e = await rejects(EncryptionManager.setup('alice', 'short'));
+      expect(e.message).to.contain('at least');
+      expect(fs.existsSync(metaPath())).to.be.false;
+
+      await EncryptionManager.setup('alice', 'long enough password');
+      const e2 = await rejects(EncryptionManager.setup('alice', 'another long password'));
+      expect(e2.message).to.contain('already');
+    });
+
+    it('should keep the files readable after the password changed (rewrap)', async () => {
+      await EncryptionManager.setup('alice', 'first long password');
+      const photo = await copyAsset('test_png.png');
+      const original = await fs.promises.readFile(photo);
+      await EncryptionManager.encryptFile(photo);
+
+      await EncryptionManager.rewrap('second long password');
+      expect(fs.readdirSync(images).filter(f => f.endsWith('.tmp'))).to.deep.equal([]);
+
+      await EncryptionManager.init();
+      expect(await EncryptionManager.unlock('alice', 'first long password')).to.be.false;
+      expect(await EncryptionManager.unlock('alice', 'second long password')).to.be.true;
+      expect((await EncryptionManager.readFile(photo)).equals(original)).to.be.true;
+    });
+
+    it('should refuse a rewrap with a short password and while locked', async () => {
+      await EncryptionManager.setup('alice', 'first long password');
+      const e = await rejects(EncryptionManager.rewrap('short'));
+      expect(e.message).to.contain('at least');
+      await EncryptionManager.init();
+      expect(await rejects(EncryptionManager.rewrap('second long password'))).to.be.instanceOf(EncryptionLockedError);
+    });
+
+    it('should not unwrap a key file that was edited to belong to an other user', async () => {
+      await EncryptionManager.setup('alice', 'first long password');
+      const meta = JSON.parse(await fs.promises.readFile(metaPath(), 'utf8'));
+      meta.unlockUser = 'mallory';
+      await fs.promises.writeFile(metaPath(), JSON.stringify(meta));
+      await EncryptionManager.init();
+      expect(await EncryptionManager.unlock('mallory', 'first long password')).to.be.false;
+    });
+
+    it('should refuse to read a key file of the old passphrase based version', async () => {
+      await fs.promises.writeFile(metaPath(), JSON.stringify({version: 1, kdf: 'scrypt', salt: 'aa'}));
+      const e = await rejects(EncryptionManager.init());
+      expect(e.message).to.contain('not supported');
+    });
+
+    it('should be off again once the key file is removed', async () => {
+      await EncryptionManager.setup('alice', 'first long password');
+      await EncryptionManager.removeKeyFile();
+      expect(EncryptionManager.isEnabled()).to.be.false;
+      expect(fs.existsSync(metaPath())).to.be.false;
     });
   });
 
   describe('files', () => {
     beforeEach(async () => {
       await setup();
-      Config.Encryption.enabled = true;
-      Config.Encryption.passphrase = 'test passphrase';
-      await EncryptionManager.init();
+      EncryptionManager.setKeyForTesting(Buffer.alloc(32, 5));
     });
 
     it('should encrypt a file in place, keeping its name and modification time', async () => {
@@ -188,13 +213,13 @@ describe('EncryptionManager', () => {
       expect((await fs.promises.readFile(photo)).equals(original)).to.be.true;
     });
 
-    it('should write new files encrypted only when encryption is enabled', async () => {
+    it('should write new files encrypted only when the gallery is encrypted', async () => {
       const a = path.join(images, 'a.txt');
       await EncryptionManager.writeFile(a, 'hello');
       expect(await EncryptionManager.isEncrypted(a)).to.be.true;
       expect((await EncryptionManager.readFile(a)).toString()).to.equal('hello');
 
-      Config.Encryption.enabled = false;
+      EncryptionManager.setKeyForTesting(null);
       const b = path.join(images, 'b.txt');
       await EncryptionManager.writeFile(b, 'hello');
       expect(await EncryptionManager.isEncrypted(b)).to.be.false;
@@ -218,9 +243,7 @@ describe('EncryptionManager', () => {
     });
 
     const enableEncryption = async (): Promise<void> => {
-      Config.Encryption.enabled = true;
-      Config.Encryption.passphrase = 'test passphrase';
-      await EncryptionManager.init();
+      EncryptionManager.setKeyForTesting(Buffer.alloc(32, 5));
     };
 
     it('should read the same photo metadata from an encrypted photo', async () => {

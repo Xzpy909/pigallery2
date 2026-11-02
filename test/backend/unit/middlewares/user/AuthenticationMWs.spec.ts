@@ -16,6 +16,10 @@ import {QueryParams} from '../../../../../src/common/QueryParams';
 import {UserMWs} from '../../../../../src/backend/middlewares/user/UserMWs';
 import {OIDCAuthService} from '../../../../../src/backend/middlewares/user/OIDCAuthService';
 import {TestHelper} from '../../../../TestHelper';
+import {EncryptionManager} from '../../../../../src/backend/model/encryption/EncryptionManager';
+import {ProjectPath} from '../../../../../src/backend/ProjectPath';
+import * as fs from 'fs';
+import * as os from 'os';
 
 
 declare let describe: any;
@@ -1166,6 +1170,95 @@ describe('Authentication middleware', (sqlHelper: DBTestHelper) => {
       (ctx.directoryAccess as any).blockList = {}; // broken context
       const r2 = await authorise(ctx, 'public');
       expect(r2.status).to.equal(404);
+    });
+  });
+  describe('encrypted gallery (locked until the unlock user logs in)', async () => {
+    let dir: string;
+    let origImageFolder: string;
+    let origUserManager: any;
+
+    beforeEach(async () => {
+      origImageFolder = ProjectPath.ImageFolder;
+      origUserManager = ObjectManagers.getInstance().UserManager;
+      dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'pg2-auth-'));
+      ProjectPath.ImageFolder = dir;
+      await EncryptionManager.setup('alice', 'alice long password');
+      await EncryptionManager.init(); // starts locked
+    });
+
+    afterEach(async () => {
+      EncryptionManager.setKeyForTesting(null);
+      ProjectPath.ImageFolder = origImageFolder;
+      ObjectManagers.getInstance().UserManager = origUserManager;
+      await fs.promises.rm(dir, {recursive: true, force: true});
+    });
+
+    const run = (mw: any, req: any): Promise<any> => new Promise((resolve) => {
+      const res: any = {status: (): any => res};
+      Promise.resolve(mw(req, res, (err?: any) => resolve(err))).catch(resolve);
+    });
+
+    const loginReq = (username: string, password: string): any => ({
+      session: {}, body: {loginCredential: {username, password}}, query: {}, params: {}
+    });
+
+    it('should refuse even a valid looking session while locked', async () => {
+      const req: any = {
+        session: {context: {user: {name: 'alice'}}, expires: Date.now() + 10000, stamp: 'stamp'},
+        sessionOptions: {}, query: {}, params: {}
+      };
+      const err = await run(AuthenticationMWs.authenticate, req);
+      expect(err.code).to.equal(ErrorCodes.NOT_AUTHENTICATED);
+      expect(req.session.context).to.be.undefined;
+    });
+
+    it('should let the login page through with a session cookie from before the restart', async () => {
+      const req: any = {session: {context: {user: {name: 'alice'}}}, query: {}, params: {}};
+      expect(await run(AuthenticationMWs.inverseAuthenticate, req)).to.be.undefined;
+    });
+
+    it('should not start a session for an other user while locked', async () => {
+      ObjectManagers.getInstance().UserManager = {
+        findOne: async (): Promise<any> => ({name: 'bob', role: UserRoles.Admin})
+      } as any;
+      const req = loginReq('bob', 'bob long password');
+      const err = await run(AuthenticationMWs.login, req);
+      expect(err.code).to.equal(ErrorCodes.NOT_AUTHENTICATED);
+      expect(req.session.context).to.be.undefined;
+      expect(EncryptionManager.isLocked()).to.be.true;
+    });
+
+    it('should not start a session if the password does not open the key', async () => {
+      // e.g. the DB password was changed while the app did not know about it
+      ObjectManagers.getInstance().UserManager = {
+        findOne: async (): Promise<any> => ({name: 'alice', role: UserRoles.Admin})
+      } as any;
+      const req = loginReq('alice', 'a different password');
+      const err = await run(AuthenticationMWs.login, req);
+      expect(err.code).to.equal(ErrorCodes.NOT_AUTHENTICATED);
+      expect(req.session.context).to.be.undefined;
+      expect(EncryptionManager.isLocked()).to.be.true;
+    });
+
+    it('should unlock the gallery when the unlock user logs in', async () => {
+      ObjectManagers.getInstance().UserManager = {
+        findOne: async (): Promise<any> => ({name: 'alice', role: UserRoles.Admin})
+      } as any;
+      const req = loginReq('alice', 'alice long password');
+      const err = await run(AuthenticationMWs.login, req);
+      expect(err).to.be.undefined;
+      expect(EncryptionManager.isLocked()).to.be.false;
+      expect(req.session.context.user.name).to.equal('alice');
+    });
+
+    it('should let other users log in once it is unlocked', async () => {
+      await EncryptionManager.unlock('alice', 'alice long password');
+      ObjectManagers.getInstance().UserManager = {
+        findOne: async (): Promise<any> => ({name: 'bob', role: UserRoles.User})
+      } as any;
+      const req = loginReq('bob', 'bob long password');
+      expect(await run(AuthenticationMWs.login, req)).to.be.undefined;
+      expect(req.session.context.user.name).to.equal('bob');
     });
   });
 });

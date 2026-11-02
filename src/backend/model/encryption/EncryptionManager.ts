@@ -14,16 +14,33 @@ import {DecryptedLoopbackServer} from './DecryptedLoopbackServer';
 
 const LOG_TAG = '[EncryptionManager]';
 
+/**
+ * Stored in the photo folder, next to the encrypted files. Holds the random master key, encrypted
+ * (AES-256-GCM) with a key that is derived (scrypt) from the password of the unlock user.
+ * Nothing in it is enough to decrypt the files without that password.
+ */
 interface KeyMeta {
-  version: 1;
-  kdf: 'scrypt' | 'raw';
-  /** hex, only for scrypt */
-  salt?: string;
-  N?: number;
-  r?: number;
-  p?: number;
-  /** HMAC of a constant with the key: tells if the passphrase / key is the right one */
-  check: string;
+  version: 2;
+  /** name of the gallery user whose login password unlocks the gallery */
+  unlockUser: string;
+  kdf: 'scrypt';
+  /** hex */
+  salt: string;
+  N: number;
+  r: number;
+  p: number;
+  /** hex: nonce (12 bytes) | encrypted master key (32 bytes) | GCM tag (16 bytes) */
+  wrappedKey: string;
+}
+
+/**
+ * The gallery has encrypted files, but the key is not loaded: the unlock user has not logged in since the start.
+ */
+export class EncryptionLockedError extends Error {
+  constructor(message = 'The gallery is encrypted and locked. Log in as the unlock user to unlock it.') {
+    super(message);
+    this.name = 'EncryptionLockedError';
+  }
 }
 
 export interface FfmpegInput {
@@ -36,68 +53,169 @@ export interface FfmpegInput {
 /**
  * Encryption at rest of the gallery.
  * - Everything that is read from the image folder or generated from it (thumbnails, transcoded videos...)
- *   is encrypted with a key that only exists in memory.
+ *   is encrypted with a master key that only exists in memory.
+ * - The gallery starts locked. The master key is unwrapped when the unlock user logs in with their password.
  * - Files are decrypted in memory, while they are sent to the client or processed.
  * - Plain (not yet encrypted) files are still readable, so a gallery can be encrypted gradually.
+ * - Encryption is active if the key file (META_FILE_NAME) exists in the photo folder.
  */
 export class EncryptionManager {
   public static readonly META_FILE_NAME = '.pg2-encryption.json';
-  private static readonly KEY_CHECK_LABEL = 'pg2-key-check-v1';
+  public static readonly MIN_PASSWORD_LENGTH = 8;
   private static readonly SCRYPT = {N: 1 << 15, r: 8, p: 1};
+  private static meta: KeyMeta = null;
   private static masterKey: Buffer = null;
-
-  /**
-   * New files are written encrypted.
-   */
-  public static isEnabled(): boolean {
-    return Config.Encryption.enabled === true;
-  }
-
-  public static hasKeyMaterial(): boolean {
-    return !!(Config.Encryption.passphrase || Config.Encryption.keyFile);
-  }
 
   public static get MetaFilePath(): string {
     return path.join(ProjectPath.ImageFolder, EncryptionManager.META_FILE_NAME);
   }
 
   /**
-   * Loads the key. Throws if encryption is enabled, but the key can not be loaded (it fails closed).
-   * If encryption is disabled the key is only loaded if there is one,
-   * so already encrypted files can still be viewed (and decrypted by the tool).
+   * New files are written encrypted.
    */
-  public static async init(): Promise<void> {
-    EncryptionManager.masterKey = null;
-    const meta = await EncryptionManager.loadMeta();
-    if (!EncryptionManager.isEnabled() && (!EncryptionManager.hasKeyMaterial() || !meta)) {
-      // nothing was encrypted yet, or the key is not given: it is only a problem when an encrypted file is found
-      return;
-    }
-    if (!EncryptionManager.hasKeyMaterial()) {
-      throw new Error('Encryption is enabled, but there is no passphrase or key file set. ' +
-        'Set Encryption.passphrase (or the PG2_ENCRYPTION_PASSPHRASE environment variable) or Encryption.keyFile.');
-    }
-
-    const {key, meta: usedMeta} = await EncryptionManager.deriveMasterKey(meta);
-    const check = EncryptionManager.keyCheck(key);
-    if (meta) {
-      if (!EncryptionManager.safeEqualHex(meta.check, check)) {
-        throw new Error('The encryption passphrase / key file does not match the one used to encrypt this gallery (' +
-          EncryptionManager.MetaFilePath + '). Refusing to start to avoid encrypting files with an other key.');
-      }
-    } else {
-      usedMeta.check = check;
-      await EncryptionManager.saveMeta(usedMeta, key);
-    }
-    EncryptionManager.masterKey = key;
-    Logger.info(LOG_TAG, 'Encryption key loaded. New files are encrypted: ' + EncryptionManager.isEnabled());
+  public static isEnabled(): boolean {
+    return EncryptionManager.meta !== null;
   }
 
   /**
-   * For tools and tests, that do not start the full server.
+   * The gallery is encrypted, but nobody has unlocked it yet.
    */
-  public static setKeyForTesting(key: Buffer | null): void {
+  public static isLocked(): boolean {
+    return EncryptionManager.meta !== null && EncryptionManager.masterKey === null;
+  }
+
+  /**
+   * Throws EncryptionLockedError while the gallery is locked.
+   * Call it before reading content, where errors would otherwise be swallowed (e.g.: files skipped by indexing),
+   * so a locked gallery can not end up with an empty or incomplete index.
+   */
+  public static assertUnlocked(): void {
+    if (EncryptionManager.isLocked()) {
+      throw new EncryptionLockedError();
+    }
+  }
+
+  public static getUnlockUser(): string | null {
+    return EncryptionManager.meta?.unlockUser ?? null;
+  }
+
+  /**
+   * Reads the key file. The gallery stays locked: the key is only available after unlock().
+   */
+  public static async init(): Promise<void> {
+    EncryptionManager.masterKey = null;
+    EncryptionManager.meta = await EncryptionManager.loadMeta();
+    if (EncryptionManager.meta) {
+      Logger.info(LOG_TAG, 'The gallery is encrypted. It is locked until "' + EncryptionManager.meta.unlockUser + '" logs in.');
+    }
+  }
+
+  /**
+   * Called after a successful login. Unlocks the gallery if the user is the unlock user.
+   * Returns true if the gallery is unlocked afterwards.
+   */
+  public static async unlock(username: string, password: string): Promise<boolean> {
+    if (EncryptionManager.meta === null || EncryptionManager.masterKey !== null) {
+      return EncryptionManager.masterKey !== null;
+    }
+    if (username !== EncryptionManager.meta.unlockUser) {
+      return false;
+    }
+    const key = await EncryptionManager.unwrap(EncryptionManager.meta, password);
+    if (!key) {
+      Logger.warn(LOG_TAG, 'The login password of "' + username + '" does not unlock the gallery. ' +
+        'Was it changed outside of the app?');
+      return false;
+    }
     EncryptionManager.masterKey = key;
+    Logger.info(LOG_TAG, 'The gallery is unlocked by "' + username + '".');
+    return true;
+  }
+
+  /**
+   * For the tool: loads the key of an already encrypted gallery with the password of its unlock user.
+   * Returns false for a wrong password.
+   */
+  public static async unlockWithPassword(password: string): Promise<boolean> {
+    if (EncryptionManager.meta === null) {
+      throw new Error('This gallery is not encrypted yet.');
+    }
+    return EncryptionManager.unlock(EncryptionManager.meta.unlockUser, password);
+  }
+
+  /**
+   * For the tool: starts encryption with a new random master key, locked to the password of the user.
+   * Fails if the gallery already has a key file.
+   */
+  public static async setup(unlockUser: string, password: string): Promise<void> {
+    if (!unlockUser) {
+      throw new Error('A user name is needed.');
+    }
+    if (password.length < EncryptionManager.MIN_PASSWORD_LENGTH) {
+      throw new Error('The password is the encryption key, use at least ' + EncryptionManager.MIN_PASSWORD_LENGTH + ' characters.');
+    }
+    const key = crypto.randomBytes(32);
+    const meta = await EncryptionManager.wrap(key, unlockUser, password);
+    try {
+      await fsp.writeFile(EncryptionManager.MetaFilePath, JSON.stringify(meta, null, 2), {flag: 'wx'});
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'EEXIST') {
+        throw new Error(EncryptionManager.MetaFilePath + ' already exists, this gallery is already set up.');
+      }
+      throw new Error('Can not write ' + EncryptionManager.MetaFilePath + ' (the image folder needs write permission' +
+        ' to store the key file next to the encrypted files): ' + (e as Error).message);
+    }
+    EncryptionManager.meta = meta;
+    EncryptionManager.masterKey = key;
+  }
+
+  /**
+   * The unlock user changed their password: the master key is wrapped again with the new one.
+   * The key must be loaded (the user just logged in or changed it while unlocked).
+   */
+  public static async rewrap(newPassword: string): Promise<void> {
+    if (EncryptionManager.meta === null) {
+      return;
+    }
+    if (newPassword.length < EncryptionManager.MIN_PASSWORD_LENGTH) {
+      throw new Error('The password is the encryption key of the gallery, use at least ' +
+        EncryptionManager.MIN_PASSWORD_LENGTH + ' characters.');
+    }
+    const meta = await EncryptionManager.wrap(EncryptionManager.getKey(), EncryptionManager.meta.unlockUser, newPassword);
+    const tmp = EncryptionManager.MetaFilePath + '.' + crypto.randomBytes(4).toString('hex') + '.tmp';
+    try {
+      await fsp.writeFile(tmp, JSON.stringify(meta, null, 2));
+      await fsp.rename(tmp, EncryptionManager.MetaFilePath);
+    } catch (e) {
+      await fsp.unlink(tmp).catch(() => {/* ignoring errors */});
+      throw e;
+    }
+    EncryptionManager.meta = meta;
+  }
+
+  /**
+   * For the tool, after everything was decrypted: the gallery is not encrypted anymore.
+   */
+  public static async removeKeyFile(): Promise<void> {
+    await fsp.unlink(EncryptionManager.MetaFilePath);
+    EncryptionManager.meta = null;
+    EncryptionManager.masterKey = null;
+  }
+
+  /**
+   * For tests, that do not go through the login.
+   */
+  public static setKeyForTesting(key: Buffer | null, unlockUser = 'test'): void {
+    EncryptionManager.masterKey = key;
+    EncryptionManager.meta = key ? {version: 2, unlockUser, kdf: 'scrypt', salt: '', N: 0, r: 0, p: 0, wrappedKey: ''} : null;
+  }
+
+  /**
+   * For tests: encryption is active, but the key is not loaded.
+   */
+  public static setLockedForTesting(unlockUser = 'test'): void {
+    EncryptionManager.masterKey = null;
+    EncryptionManager.meta = {version: 2, unlockUser, kdf: 'scrypt', salt: '', N: 0, r: 0, p: 0, wrappedKey: ''};
   }
 
   public static async isEncrypted(filePath: string): Promise<boolean> {
@@ -139,7 +257,7 @@ export class EncryptionManager {
   }
 
   /**
-   * Writes the data to the file, encrypted if encryption is enabled.
+   * Writes the data to the file, encrypted if the gallery is encrypted.
    */
   public static async writeFile(filePath: string, data: Buffer | string): Promise<void> {
     const buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
@@ -271,80 +389,73 @@ export class EncryptionManager {
 
   private static getKey(): Buffer {
     if (!EncryptionManager.masterKey) {
-      throw new Error('The gallery has encrypted files, but there is no encryption key loaded. ' +
-        'Set Encryption.passphrase (or the PG2_ENCRYPTION_PASSPHRASE environment variable) or Encryption.keyFile and restart.');
+      throw new EncryptionLockedError();
     }
     return EncryptionManager.masterKey;
   }
 
-  private static async deriveMasterKey(meta: KeyMeta | null): Promise<{ key: Buffer, meta: KeyMeta }> {
-    let secret = Config.Encryption.passphrase;
-    if (Config.Encryption.keyFile) {
-      const raw = await fsp.readFile(ProjectPath.getAbsolutePath(Config.Encryption.keyFile));
-      const text = raw.toString('utf8').trim();
-      if (/^[0-9a-fA-F]{64}$/.test(text)) {
-        if (meta && meta.kdf !== 'raw') {
-          throw new Error('The gallery was encrypted with a passphrase, but a raw key file is configured.');
-        }
-        return {key: Buffer.from(text, 'hex'), meta: {version: 1, kdf: 'raw', check: ''}};
-      }
-      secret = text;
-    }
-    if (!secret) {
-      throw new Error('The encryption key file is empty.');
-    }
-    if (meta && meta.kdf !== 'scrypt') {
-      throw new Error('The gallery was encrypted with a raw key, but a passphrase is configured.');
-    }
-    const params = meta ? {N: meta.N, r: meta.r, p: meta.p} : EncryptionManager.SCRYPT;
-    const salt = meta ? Buffer.from(meta.salt, 'hex') : crypto.randomBytes(16);
-    const key = await new Promise<Buffer>((resolve, reject) => {
-      crypto.scrypt(secret.normalize('NFKC'), salt, 32,
-        {...params, maxmem: 256 * params.N * params.r},
+  private static deriveKek(password: string, salt: Buffer, params: { N: number, r: number, p: number }): Promise<Buffer> {
+    return new Promise<Buffer>((resolve, reject) => {
+      crypto.scrypt(password.normalize('NFKC'), salt, 32,
+        {N: params.N, r: params.r, p: params.p, maxmem: 256 * params.N * params.r},
         (err, derived) => err ? reject(err) : resolve(derived));
     });
-    return {key, meta: {version: 1, kdf: 'scrypt', salt: salt.toString('hex'), ...params, check: ''}};
   }
 
-  private static keyCheck(key: Buffer): string {
-    return crypto.createHmac('sha256', key).update(EncryptionManager.KEY_CHECK_LABEL).digest('hex');
+  private static wrapAad(unlockUser: string): Buffer {
+    return Buffer.from('pg2-wrap-v2|' + unlockUser);
   }
 
-  private static safeEqualHex(a: string, b: string): boolean {
-    const ba = Buffer.from(a || '', 'hex');
-    const bb = Buffer.from(b || '', 'hex');
-    return ba.length === bb.length && ba.length > 0 && crypto.timingSafeEqual(ba, bb);
+  private static async wrap(masterKey: Buffer, unlockUser: string, password: string): Promise<KeyMeta> {
+    const salt = crypto.randomBytes(16);
+    const params = EncryptionManager.SCRYPT;
+    const kek = await EncryptionManager.deriveKek(password, salt, params);
+    const nonce = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', kek, nonce, {authTagLength: 16});
+    cipher.setAAD(EncryptionManager.wrapAad(unlockUser));
+    const wrapped = Buffer.concat([nonce, cipher.update(masterKey), cipher.final(), cipher.getAuthTag()]);
+    return {version: 2, unlockUser, kdf: 'scrypt', salt: salt.toString('hex'), ...params, wrappedKey: wrapped.toString('hex')};
+  }
+
+  /**
+   * Returns null for a wrong password (the authentication tag does not match).
+   */
+  private static async unwrap(meta: KeyMeta, password: string): Promise<Buffer | null> {
+    const kek = await EncryptionManager.deriveKek(password, Buffer.from(meta.salt, 'hex'), meta);
+    const wrapped = Buffer.from(meta.wrappedKey, 'hex');
+    if (wrapped.length !== 12 + 32 + 16) {
+      throw new Error('The key file ' + EncryptionManager.MetaFilePath + ' is corrupt.');
+    }
+    try {
+      const decipher = crypto.createDecipheriv('aes-256-gcm', kek, wrapped.subarray(0, 12), {authTagLength: 16});
+      decipher.setAAD(EncryptionManager.wrapAad(meta.unlockUser));
+      decipher.setAuthTag(wrapped.subarray(wrapped.length - 16));
+      return Buffer.concat([decipher.update(wrapped.subarray(12, wrapped.length - 16)), decipher.final()]);
+    } catch (e) {
+      return null;
+    }
   }
 
   private static async loadMeta(): Promise<KeyMeta | null> {
+    let raw: string;
     try {
-      return JSON.parse(await fsp.readFile(EncryptionManager.MetaFilePath, 'utf8'));
+      raw = await fsp.readFile(EncryptionManager.MetaFilePath, 'utf8');
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
         return null;
       }
       throw new Error('Can not read ' + EncryptionManager.MetaFilePath + ': ' + (e as Error).message);
     }
-  }
-
-  /**
-   * The salt must stay with the encrypted files (not in the temp folder or config that can be wiped),
-   * otherwise the files could not be decrypted even with the right passphrase.
-   */
-  private static async saveMeta(meta: KeyMeta, key: Buffer): Promise<void> {
+    let meta: KeyMeta;
     try {
-      await fsp.writeFile(EncryptionManager.MetaFilePath, JSON.stringify(meta, null, 2), {flag: 'wx'});
+      meta = JSON.parse(raw);
     } catch (e) {
-      if ((e as NodeJS.ErrnoException).code === 'EEXIST') {
-        // an other process was faster, it must have used the same key
-        const existing = await EncryptionManager.loadMeta();
-        if (existing && EncryptionManager.safeEqualHex(existing.check, EncryptionManager.keyCheck(key))) {
-          return;
-        }
-        throw new Error('The encryption passphrase / key file does not match ' + EncryptionManager.MetaFilePath);
-      }
-      throw new Error('Can not write ' + EncryptionManager.MetaFilePath + ' (the image folder needs write permission' +
-        ' to store the salt next to the encrypted files): ' + (e as Error).message);
+      throw new Error('The key file ' + EncryptionManager.MetaFilePath + ' is corrupt.');
     }
+    if (meta.version !== 2 || !meta.unlockUser || !meta.wrappedKey) {
+      throw new Error('The key file ' + EncryptionManager.MetaFilePath + ' is not supported by this version' +
+        ' (it was made by an older, passphrase based version).');
+    }
+    return meta;
   }
 }

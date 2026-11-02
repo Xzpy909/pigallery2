@@ -233,7 +233,6 @@ describe('UploadManager', () => {
   });
 
   it('should store an uploaded file encrypted when encryption is enabled', async () => {
-    Config.Encryption.enabled = true;
     EncryptionManager.setKeyForTesting(Buffer.alloc(32, 7));
     try {
       const content = Buffer.from('secret image content');
@@ -245,7 +244,6 @@ describe('UploadManager', () => {
       expect(await EncryptionManager.isEncrypted(savedPath)).to.be.true;
       expect((await EncryptionManager.readFile(savedPath)).equals(content)).to.be.true;
     } finally {
-      Config.Encryption.enabled = false;
       EncryptionManager.setKeyForTesting(null);
     }
   });
