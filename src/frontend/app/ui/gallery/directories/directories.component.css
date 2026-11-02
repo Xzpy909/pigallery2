@@ -2,3 +2,24 @@ app-gallery-directory {
   margin: 2px;
   display: inline-block;
 }
+
+.new-folder {
+  margin: 2px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  vertical-align: top;
+  border: 2px dashed var(--bs-border-color);
+  background: transparent;
+  color: var(--bs-secondary-color);
+  font-size: 3rem;
+}
+
+.new-folder .label {
+  font-size: 1rem;
+}
+
+.new-folder:hover {
+  color: var(--bs-body-color);
+}

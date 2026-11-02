@@ -1,0 +1,80 @@
+@if (selection.active() && edit.canEdit()) {
+  <div class="selection-bar" role="toolbar">
+    <button type="button" class="btn btn-link text-reset" (click)="selection.clear()"
+            title="Clear selection" i18n-title aria-label="Clear selection" i18n-aria-label>
+      <ng-icon name="ionCloseOutline" />
+    </button>
+    <span class="count">{{ selection.count() }} <ng-container i18n>selected</ng-container></span>
+    <span class="spacer"></span>
+    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="toggleAll()">
+      <ng-icon name="ionCheckmarkCircle" />
+      @if (allSelected) {
+        <ng-container i18n>Deselect all</ng-container>
+      } @else {
+        <ng-container i18n>Select all</ng-container>
+      }
+    </button>
+    <button type="button" class="btn btn-sm btn-primary" (click)="edit.openMove()">
+      <ng-icon name="ionFolderOutline" />
+      <ng-container i18n>Move to folder</ng-container>
+    </button>
+  </div>
+}
+
+@if (edit.dialog(); as d) {
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" (click)="edit.closeDialog()">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <form class="modal-content" (ngSubmit)="submit()">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            @switch (d.type) {
+              @case ('newFolder') {<ng-container i18n>New folder</ng-container>}
+              @case ('rename') {<ng-container i18n>Rename folder</ng-container>}
+              @case ('move') {<ng-container i18n>Move to folder</ng-container>}
+            }
+          </h5>
+          <button type="button" class="btn-close" (click)="edit.closeDialog()" aria-label="Close" i18n-aria-label></button>
+        </div>
+        <div class="modal-body">
+          @if (d.type === 'move') {
+            <div class="mb-2 text-muted"><ng-container i18n>Selected items:</ng-container> {{ selection.count() }}</div>
+            <div class="current-folder mb-2"><ng-icon name="ionFolderOutline" /> {{ browseLabel() }}</div>
+            <div class="folder-list list-group">
+              @if (browsePath()) {
+                <button type="button" class="list-group-item list-group-item-action" (click)="up()">
+                  <ng-icon name="ionChevronUpOutline" /> ..
+                </button>
+              }
+              @for (f of folders(); track f) {
+                <button type="button" class="list-group-item list-group-item-action" (click)="enter(f)">
+                  <ng-icon name="ionFolderOutline" /> {{ f }}
+                </button>
+              }
+              @if (folders().length === 0) {
+                <div class="list-group-item text-muted" i18n>No subfolders</div>
+              }
+            </div>
+          } @else {
+            <label class="form-label" for="edit-folder-name" i18n>Folder name</label>
+            <input id="edit-folder-name" name="name" class="form-control" [(ngModel)]="name"
+                   autocomplete="off" autofocus maxlength="255" required>
+          }
+          @if (error) {
+            <div class="alert alert-danger mt-3 mb-0" role="alert">{{ error }}</div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="edit.closeDialog()" i18n>Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="busy || (d.type !== 'move' && !name.trim())">
+            @switch (d.type) {
+              @case ('newFolder') {<ng-container i18n>Create</ng-container>}
+              @case ('rename') {<ng-container i18n>Rename</ng-container>}
+              @case ('move') {<ng-container i18n>Move here</ng-container>}
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

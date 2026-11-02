@@ -9,6 +9,7 @@ import {PageHelper} from '../../../model/page.helper';
 import {Subscription} from 'rxjs';
 import {ActivatedRoute, Params, Router} from '@angular/router';
 import {QueryService} from '../../../model/query.service';
+import {SelectionService} from '../edit/selection.service';
 import {MediaDTO, MediaDTOUtils,} from '../../../../../common/entities/MediaDTO';
 import {QueryParams} from '../../../../../common/QueryParams';
 import {GallerySortingService, MediaGroup} from '../navigator/sorting.service';
@@ -44,6 +45,7 @@ export class GalleryGridComponent
   private changeDetector = inject(ChangeDetectorRef);
   queryService = inject(QueryService);
   private router = inject(Router);
+  private selection = inject(SelectionService);
   sortingService = inject(GallerySortingService);
   navigatorService = inject(GalleryNavigatorService);
   private route = inject(ActivatedRoute);
@@ -191,6 +193,10 @@ export class GalleryGridComponent
   }
 
   photoClicked(media: MediaDTO): void {
+    if (this.selection.active()) { // while selecting a click selects instead of opening
+      this.selection.toggle(media);
+      return;
+    }
     this.router.navigate([], {
       queryParams: this.queryService.getParams({media}),
     });

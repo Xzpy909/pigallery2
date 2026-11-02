@@ -3,3 +3,11 @@
   [size]="size" />
 }
 
+@if (canCreate) {
+  <button type="button" class="new-folder button btn btn-secondary"
+          [style.width.px]="size" [style.height.px]="size"
+          title="New folder" i18n-title (click)="newFolder()">
+    <ng-icon name="ionAddOutline" />
+    <span class="label" i18n>New folder</span>
+  </button>
+}

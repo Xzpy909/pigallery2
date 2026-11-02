@@ -9,6 +9,7 @@ import {PhotoDTO, PhotoMetadata,} from '../../../../../../common/entities/PhotoD
 import {SearchQueryTypes, TextSearch, TextSearchQueryMatchTypes,} from '../../../../../../common/entities/SearchQueryDTO';
 import {AuthenticationService} from '../../../../model/network/authentication.service';
 import {ExtensionService} from '../../../../model/extension.service';
+import {SelectionService} from '../../edit/selection.service';
 import {MediaButtonModalService} from './media-button-modal/media-button-modal.service';
 
 import {GalleryPhotoLoadingComponent} from './loading/loading.photo.grid.gallery.component';
@@ -41,6 +42,7 @@ export class GalleryPhotoComponent implements IRenderable, OnInit, OnDestroy {
   private authService = inject(AuthenticationService);
   private extensionService = inject(ExtensionService);
   private modalService = inject(MediaButtonModalService);
+  private selection = inject(SelectionService);
 
   readonly gridMedia = input<GridMedia>(undefined);
   readonly imageRef = viewChild<ElementRef>('img');
@@ -60,6 +62,20 @@ export class GalleryPhotoComponent implements IRenderable, OnInit, OnDestroy {
 
   constructor() {
     this.searchEnabled = this.authService.canSearch();
+  }
+
+  get canSelect(): boolean {
+    return this.selection.canEdit();
+  }
+
+  get selected(): boolean {
+    return this.selection.isSelected(this.gridMedia().media);
+  }
+
+  toggleSelected(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.selection.toggle(this.gridMedia().media);
   }
 
   get ScrollListener(): boolean {
