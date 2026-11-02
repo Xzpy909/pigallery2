@@ -231,3 +231,55 @@ a {
 .no-click {
   cursor: auto;
 }
+
+.select-button {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 3;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(255, 255, 255, .9);
+  font-size: 24px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .15s;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, .7));
+  cursor: pointer;
+}
+
+.photo-container:hover .select-button,
+.select-button:focus-visible,
+.select-button.checked {
+  opacity: 1;
+}
+
+/* touch screens have no hover */
+@media (hover: none) {
+  .select-button {
+    opacity: .8;
+  }
+}
+
+.select-button.checked {
+  color: var(--bs-primary, #0d6efd);
+  background: white;
+  filter: none;
+}
+
+.photo-container.selected {
+  outline: 3px solid var(--bs-primary, #0d6efd);
+  outline-offset: -3px;
+}
+
+.photo-container.selected img {
+  transform: scale(.9);
+  transition: transform .15s;
+}

@@ -32,6 +32,8 @@ import {PhotoFilterPipe} from '../../pipes/PhotoFilterPipe';
 import {MediaButtonModalComponent} from './grid/photo/media-button-modal/media-button-modal.component';
 import {ContentWrapperWithError} from '../../../../common/entities/ContentWrapper';
 import {SearchQueryUtils} from '../../../../common/SearchQueryUtils';
+import {GalleryEditComponent} from './edit/edit.component';
+import {MediaDTO} from '../../../../common/entities/MediaDTO';
 import {UploaderService} from './uploader/uploader.service';
 import {getDroppedRoots} from './uploader/dropped-files';
 import {GalleryService} from './gallery.service';
@@ -61,7 +63,8 @@ import {UploaderComponent} from './uploader/uploader.gallery.component';
     GPXFilesFilterPipe,
     PhotoFilterPipe,
     MediaButtonModalComponent,
-    UploaderComponent
+    UploaderComponent,
+    GalleryEditComponent
 ]
 })
 export class GalleryComponent implements OnInit, OnDestroy {
@@ -96,6 +99,10 @@ export class GalleryComponent implements OnInit, OnDestroy {
   public readonly mapEnabled: boolean;
   public directoryContent: GroupedDirectoryContent;
   public isUploadOver = false;
+
+  get allMedia(): MediaDTO[] {
+    return (this.directoryContent?.mediaGroups || []).flatMap((g) => g.media);
+  }
   private $counter: Observable<number>;
   private subscription: { [key: string]: Subscription } = {
     content: null,

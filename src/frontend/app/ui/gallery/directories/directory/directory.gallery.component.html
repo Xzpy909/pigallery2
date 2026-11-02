@@ -22,4 +22,10 @@
 
   </div>
 </a>
+@if (canEdit) {
+  <button type="button" class="edit-button" (click)="rename($event)"
+          title="Rename folder" i18n-title aria-label="Rename folder" i18n-aria-label>
+    <ng-icon name="ionPencil" />
+  </button>
+}
 

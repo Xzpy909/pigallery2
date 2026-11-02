@@ -24,6 +24,10 @@ class MockThumbnailManagerService {
 }
 
 class MockAuthenticationService {
+  isAuthenticated() {
+    return false;
+  }
+
   canSearch() {
     return false;
   }

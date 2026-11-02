@@ -2,6 +2,8 @@ import { Component, ElementRef, OnChanges, inject, input, ChangeDetectionStrateg
 import {DeviceHelper} from '../../../model/device.helper';
 import {SubDirectoryDTO} from '../../../../../common/entities/DirectoryDTO';
 
+import {NgIconComponent} from '@ng-icons/core';
+import {FileEditService} from '../edit/file-edit.service';
 import { GalleryDirectoryComponent } from './directory/directory.gallery.component';
 
 @Component({
@@ -12,10 +14,11 @@ import { GalleryDirectoryComponent } from './directory/directory.gallery.compone
     templateUrl: './directories.component.html',
     styleUrl: './directories.component.css',
     changeDetection: ChangeDetectionStrategy.Eager,
-    imports: [GalleryDirectoryComponent]
+    imports: [GalleryDirectoryComponent, NgIconComponent]
 })
 export class DirectoriesComponent implements OnChanges {
   private container = inject(ElementRef);
+  private fileEdit = inject(FileEditService);
 
   readonly directories = input<SubDirectoryDTO[]>(undefined);
   size: number;
@@ -23,6 +26,15 @@ export class DirectoriesComponent implements OnChanges {
 
   constructor() {
     this.isDesktop = !DeviceHelper.isTouchDevice();
+  }
+
+  /** Only inside a real directory (not in a search result) */
+  get canCreate(): boolean {
+    return this.fileEdit.canEdit() && this.fileEdit.currentDirectory() !== null;
+  }
+
+  newFolder(): void {
+    this.fileEdit.openNewFolder();
   }
 
   // Side effect: recalculates the tile size from the window and the container.

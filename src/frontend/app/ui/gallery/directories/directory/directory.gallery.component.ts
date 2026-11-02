@@ -8,6 +8,9 @@ import {Thumbnail, ThumbnailManagerService,} from '../../thumbnailManager.servic
 import {QueryService} from '../../../../model/query.service';
 import {CoverPhotoDTO} from '../../../../../../common/entities/PhotoDTO';
 
+import {NgIconComponent} from '@ng-icons/core';
+import {FileEditService} from '../../edit/file-edit.service';
+import {SelectionService} from '../../edit/selection.service';
 import { IconComponent } from '../../../../icon.component';
 
 @Component({
@@ -17,13 +20,15 @@ import { IconComponent } from '../../../../icon.component';
     changeDetection: ChangeDetectionStrategy.Eager,
     imports: [
     RouterLink,
-    IconComponent
+    IconComponent,
+    NgIconComponent
 ]
 })
 export class GalleryDirectoryComponent implements OnInit, OnDestroy {
   private thumbnailService = inject(ThumbnailManagerService);
   private sanitizer = inject(DomSanitizer);
   queryService = inject(QueryService);
+  private fileEdit = inject(FileEditService);
 
   readonly directory = input<SubDirectoryDTO>(undefined);
   readonly size = input<number>(undefined);
@@ -48,6 +53,16 @@ export class GalleryDirectoryComponent implements OnInit, OnDestroy {
      return document.body.scrollTop < this.container.nativeElement.offsetTop + this.container.nativeElement.clientHeight
        && document.body.scrollTop + window.innerHeight > this.container.nativeElement.offsetTop;
    }*/
+
+  get canEdit(): boolean {
+    return this.fileEdit.canEdit();
+  }
+
+  rename(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.fileEdit.openRename(SelectionService.normalizeDir(this.getDirectoryPath()), this.directory().name);
+  }
 
   getDirectoryPath(): string {
     return Utils.concatUrls(this.directory().path, this.directory().name);

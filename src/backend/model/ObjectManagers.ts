@@ -18,6 +18,7 @@ import {ExtensionManager} from './extension/ExtensionManager';
 import {ProjectedCacheManager} from './database/ProjectedCacheManager';
 import {SessionManager} from './database/SessionManager';
 import { UploadManager } from './UploadManager';
+import {FileEditManager} from './FileEditManager';
 
 const LOG_TAG = '[ObjectManagers]';
 
@@ -40,6 +41,7 @@ export class ObjectManagers {
   private extensionManager: ExtensionManager;
   private projectedCacheManager: ProjectedCacheManager;
   private uploadManager: UploadManager;
+  private fileEditManager: FileEditManager;
   private sessionManager: SessionManager;
   private initDone = false;
 
@@ -109,6 +111,7 @@ export class ObjectManagers {
     this.ProjectedCacheManager = new ProjectedCacheManager();
     this.SessionManager = new SessionManager();
     this.UploadManager = new UploadManager();
+    this.fileEditManager = new FileEditManager();
 
     for (const manager of ObjectManagers.getInstance().managers) {
       if (manager === ObjectManagers.getInstance().versionManager) {
@@ -254,6 +257,10 @@ export class ObjectManagers {
     }
     this.sharingManager = value;
     this.managers.push(this.sharingManager as IObjectManager);
+  }
+
+  get FileEditManager(): FileEditManager {
+    return this.fileEditManager;
   }
 
   get UploadManager(): UploadManager {

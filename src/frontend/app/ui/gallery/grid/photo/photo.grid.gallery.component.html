@@ -1,4 +1,13 @@
-<div #photoContainer class="photo-container rounded" (mouseover)="mouseOver()" (mouseout)="mouseOut()">
+<div #photoContainer class="photo-container rounded" [class.selected]="selected" (mouseover)="mouseOver()" (mouseout)="mouseOut()">
+
+  @if (canSelect) {
+    <button type="button" class="select-button" [class.checked]="selected"
+            [attr.aria-pressed]="selected"
+            title="Select" i18n-title aria-label="Select" i18n-aria-label
+            (click)="toggleSelected($event)">
+      <ng-icon name="ionCheckmarkCircle" />
+    </button>
+  }
 
 
   @if (thumbnail.Available) {
