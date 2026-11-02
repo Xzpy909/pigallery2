@@ -1,0 +1,79 @@
+<app-frame>
+  <div body class="container">
+    <h3 class="mt-3" i18n>Encrypt media files</h3>
+
+    @if (status) {
+      @if (!status.enabled) {
+        <div class="card my-3">
+          <div class="card-body">
+            <p i18n>Encrypts all photos, videos and meta files on the disk, and everything generated from them
+              (thumbnails, converted videos). They are only decrypted while you view them.</p>
+            <p i18n>The encryption key is protected by your login password (<strong>{{status.currentUser}}</strong>).
+              After every restart the gallery is locked until you log in. <strong>If you lose this password, the
+                files can not be recovered.</strong> Back up your photos before you start.</p>
+            <p class="text-body-secondary" i18n>Not encrypted: file and folder names, and the database (metadata like
+              GPS positions, captions, face names). Do not change this password outside of the app.</p>
+            <label for="encryption-password" class="form-label" i18n>Confirm your password</label>
+            <div class="input-group mb-2">
+              <input id="encryption-password" class="form-control" type="password" autocomplete="current-password"
+                     [(ngModel)]="password" (keyup.enter)="canSetup && !busy && setup()"
+                     [disabled]="busy || running">
+              <button class="btn btn-danger" type="button" (click)="setup()"
+                      [disabled]="!canSetup || busy || running">
+                <ng-icon name="ionLockClosedOutline" />
+                <ng-container i18n>Encrypt everything</ng-container>
+              </button>
+            </div>
+            <div class="form-text" i18n>At least {{status.minPasswordLength}} characters: the password is the
+              encryption key, so a long one is stronger.</div>
+          </div>
+        </div>
+      } @else {
+        <div class="alert alert-success" role="alert">
+          <ng-icon name="ionLockClosedOutline" />
+          <ng-container i18n>The gallery is encrypted. It is unlocked by the login of
+            <strong>{{status.unlockUser}}</strong>.</ng-container>
+        </div>
+        <p i18n>New uploads are encrypted automatically. Use this after you copied new files into the photo folder
+          directly: it encrypts the files that are not encrypted yet.</p>
+        <button class="btn btn-primary" type="button" (click)="encrypt()" [disabled]="busy || running">
+          <ng-icon name="ionLockClosedOutline" />
+          <ng-container i18n>Encrypt files that are not encrypted yet</ng-container>
+        </button>
+      }
+    }
+
+    @if (error) {
+      <div class="alert alert-danger mt-3" role="alert">{{error}}</div>
+    }
+
+    @if (progress) {
+      <div class="card my-3">
+        <div class="card-body">
+          @if (running) {
+            <div class="d-flex align-items-center justify-content-between">
+              <span i18n>Encrypting...</span>
+              <button class="btn btn-sm btn-outline-secondary" type="button" (click)="stop()" i18n>Stop</button>
+            </div>
+          }
+          @if (finished) {
+            <div class="text-success" i18n>Done.</div>
+          }
+          @if (failed) {
+            <div class="text-danger" i18n>The job failed, see the log below.</div>
+          }
+          <div class="mt-2" i18n>Encrypted: {{progress.steps.processed}}, already encrypted: {{progress.steps.skipped}}</div>
+          @if (running) {
+            <div class="progress mt-2" role="progressbar">
+              <div class="progress-bar progress-bar-striped progress-bar-animated w-100"></div>
+            </div>
+          }
+          @if (progress.logs?.length) {
+            <pre class="log mt-3">@for (l of progress.logs.slice(-15); track l.id) {{{l.comment}}
+}</pre>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</app-frame>

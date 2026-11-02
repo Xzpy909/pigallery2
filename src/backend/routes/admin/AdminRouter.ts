@@ -10,6 +10,7 @@ export class AdminRouter {
     this.addGetStatistic(app);
     this.addGetDuplicates(app);
     this.addJobs(app);
+    this.addEncryption(app);
     this.addMessengers(app);
   }
 
@@ -29,6 +30,23 @@ export class AdminRouter {
         AuthenticationMWs.authenticate,
         AuthenticationMWs.authorise(UserRoles.Admin),
         AdminMWs.getDuplicates,
+        RenderingMWs.renderResult
+    );
+  }
+
+  private static addEncryption(app: Express): void {
+    app.get(
+        Config.Server.apiPath + '/admin/encryption/status',
+        AuthenticationMWs.authenticate,
+        AuthenticationMWs.authorise(UserRoles.Admin),
+        AdminMWs.getEncryptionStatus,
+        RenderingMWs.renderResult
+    );
+    app.post(
+        Config.Server.apiPath + '/admin/encryption/setup',
+        AuthenticationMWs.authenticate,
+        AuthenticationMWs.authorise(UserRoles.Admin),
+        AdminMWs.setupEncryption,
         RenderingMWs.renderResult
     );
   }

@@ -1438,7 +1438,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/frame/frame.component.html</context>
-          <context context-type="linenumber">247</context>
+          <context context-type="linenumber">254</context>
         </context-group>
         <target>Upload</target>
       </trans-unit>
@@ -3794,11 +3794,19 @@
         </context-group>
         <target>Afsendelse af bedste udvalgte</target>
       </trans-unit>
+      <trans-unit id="331855705412789556" datatype="html">
+        <source>Media encryption</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
+          <context context-type="linenumber">82</context>
+        </context-group>
+        <target>Media encryption</target>
+      </trans-unit>
       <trans-unit id="2475010441004734481" datatype="html">
         <source>It is not necessary to run this job explicitly as the app can do this on-the-file while navigation the gallery. This only speeds up the navigation speed in the app.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
-          <context context-type="linenumber">90</context>
+          <context context-type="linenumber">92</context>
         </context-group>
         <target>It is not necessary to run this job explicitly as the app can do this on-the-file while navigation the gallery. This only speeds up the navigation speed in the app.</target>
       </trans-unit>
@@ -3806,7 +3814,7 @@
         <source>Scans the whole gallery from disk and indexes it to the DB.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
-          <context context-type="linenumber">93</context>
+          <context context-type="linenumber">95</context>
         </context-group>
         <target>Skanner hele galleriet fra disk, og indekserer det i databasen.</target>
       </trans-unit>
@@ -3814,7 +3822,7 @@
         <source>Deletes all directories, photos and videos from the DB.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
-          <context context-type="linenumber">95</context>
+          <context context-type="linenumber">97</context>
         </context-group>
         <target>Sletter alle mapper, fotoes og videoer fra databasen.</target>
       </trans-unit>
@@ -3822,7 +3830,7 @@
         <source>Removes all albums from the DB</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
-          <context context-type="linenumber">97</context>
+          <context context-type="linenumber">99</context>
         </context-group>
         <target>Fjerner alle albums fra databasen</target>
       </trans-unit>
@@ -3830,7 +3838,7 @@
         <source>Generates thumbnails and high-res photos from all media files and stores them in the tmp folder. Smaller sizes will be used for thumbnail (in the grid view), bigger sizes for previews (in the lightbox). Videos does not use photo previews (the app loads the video file instead).</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
-          <context context-type="linenumber">99</context>
+          <context context-type="linenumber">101</context>
         </context-group>
         <target>Generates thumbnails and high-res photos from all media files and stores them in the tmp folder. Smaller sizes will be used for thumbnail (in the grid view), bigger sizes for previews (in the lightbox). Videos does not use photo previews (the app loads the video file instead).</target>
       </trans-unit>
@@ -3838,7 +3846,7 @@
         <source>Transcodes all videos and stores them in the tmp folder.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
-          <context context-type="linenumber">101</context>
+          <context context-type="linenumber">103</context>
         </context-group>
         <target>Konverterer (transcoder) alle videoer og gemmer dem i tmp-mappen.</target>
       </trans-unit>
@@ -3846,7 +3854,7 @@
         <source>Removes unnecessary files from the tmp folder.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
-          <context context-type="linenumber">103</context>
+          <context context-type="linenumber">105</context>
         </context-group>
         <target>Fjerner unødvendige filer fra tmp-mappen.</target>
       </trans-unit>
@@ -3854,7 +3862,7 @@
         <source>Updates the cover photo of all albums (both directories and saved searches) and faces.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
-          <context context-type="linenumber">105</context>
+          <context context-type="linenumber">107</context>
         </context-group>
         <target>Opdaterer cover foto på alle albums (både mapper og gemte søgninger) and ansigter.</target>
       </trans-unit>
@@ -3862,7 +3870,7 @@
         <source>Deletes the cover photo of all albums and faces</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
-          <context context-type="linenumber">107</context>
+          <context context-type="linenumber">109</context>
         </context-group>
         <target>Sletter cover-foto på alle albums og ansigter</target>
       </trans-unit>
@@ -3870,7 +3878,7 @@
         <source>Compresses all gpx files</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
-          <context context-type="linenumber">109</context>
+          <context context-type="linenumber">111</context>
         </context-group>
         <target>Komprimerer alle gpx filer</target>
       </trans-unit>
@@ -3878,7 +3886,7 @@
         <source>Deletes all compressed GPX files</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
-          <context context-type="linenumber">111</context>
+          <context context-type="linenumber">113</context>
         </context-group>
         <target>Sletter alle komprimerede GPX filer</target>
       </trans-unit>
@@ -3886,9 +3894,17 @@
         <source>Gets the top photos of the selected search queries and sends them over email. You need to set up the SMTP server connection to send e-mails.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
-          <context context-type="linenumber">113</context>
+          <context context-type="linenumber">115</context>
         </context-group>
         <target>Tager de bedste fotos i det valgte søgninger og sender dem via email. Du skal have sat en SMTP server forbindelse op for at sende emails.</target>
+      </trans-unit>
+      <trans-unit id="6283411963667817637" datatype="html">
+        <source>Encrypts all photos, videos and meta files that are not encrypted yet. It is available once the gallery is encrypted (Tools / Encrypt media files).</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
+          <context context-type="linenumber">117</context>
+        </context-group>
+        <target>Encrypts all photos, videos and meta files that are not encrypted yet. It is available once the gallery is encrypted (Tools / Encrypt media files).</target>
       </trans-unit>
       <trans-unit id="3257486285145946953" datatype="html">
         <source>Show fewer notifications</source>
@@ -4748,6 +4764,184 @@
         </context-group>
         <target>Ingen dubletter fundet</target>
       </trans-unit>
+      <trans-unit id="4135902963499763591" datatype="html">
+        <source>Encrypt media files</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">3,5</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.ts</context>
+          <context context-type="linenumber">34</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/frame/frame.component.html</context>
+          <context context-type="linenumber">207</context>
+        </context-group>
+        <target>Encrypt media files</target>
+      </trans-unit>
+      <trans-unit id="1355504339289824403" datatype="html">
+        <source>Encrypts all photos, videos and meta files on the disk, and everything generated from them (thumbnails, converted videos). They are only decrypted while you view them.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">9,10</context>
+        </context-group>
+        <target>Encrypts all photos, videos and meta files on the disk, and everything generated from them (thumbnails, converted videos). They are only decrypted while you view them.</target>
+      </trans-unit>
+      <trans-unit id="6548333405406881598" datatype="html">
+        <source>
+          The encryption key is protected by your login password (). After every restart the gallery is locked until you log in. If you lose this password, the files can not be recovered. Back up your photos before you start.
+          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>
+          <x id="INTERPOLATION" equiv-text="{{status.currentUser}}"/>
+          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>
+          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>
+          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>
+        </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">11,14</context>
+        </context-group>
+        <target>
+          The encryption key is protected by your login password (). After every restart the gallery is locked until you log in. If you lose this password, the files can not be recovered. Back up your photos before you start.
+          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>
+          <x id="INTERPOLATION" equiv-text="{{status.currentUser}}"/>
+          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>
+          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>
+          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>
+        </target>
+      </trans-unit>
+      <trans-unit id="616370157711550376" datatype="html">
+        <source>Not encrypted: file and folder names, and the database (metadata like GPS positions, captions, face names). Do not change this password outside of the app.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">14,15</context>
+        </context-group>
+        <target>Not encrypted: file and folder names, and the database (metadata like GPS positions, captions, face names). Do not change this password outside of the app.</target>
+      </trans-unit>
+      <trans-unit id="5850698978356573024" datatype="html">
+        <source>Confirm your password</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">16,17</context>
+        </context-group>
+        <target>Confirm your password</target>
+      </trans-unit>
+      <trans-unit id="6199755237632392180" datatype="html">
+        <source>Encrypt everything</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">24</context>
+        </context-group>
+        <target>Encrypt everything</target>
+      </trans-unit>
+      <trans-unit id="4855458956093678922" datatype="html">
+        <source>
+          At least  characters: the password is the encryption key, so a long one is stronger.
+          <x id="INTERPOLATION" equiv-text="{{status.minPasswordLength}}"/>
+        </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">27,28</context>
+        </context-group>
+        <target>
+          At least  characters: the password is the encryption key, so a long one is stronger.
+          <x id="INTERPOLATION" equiv-text="{{status.minPasswordLength}}"/>
+        </target>
+      </trans-unit>
+      <trans-unit id="5761522108840491065" datatype="html">
+        <source>
+          The gallery is encrypted. It is unlocked by the login of .
+          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>
+          <x id="INTERPOLATION" equiv-text="{{status.unlockUser}}"/>
+          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>
+        </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">34,36</context>
+        </context-group>
+        <target>
+          The gallery is encrypted. It is unlocked by the login of .
+          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>
+          <x id="INTERPOLATION" equiv-text="{{status.unlockUser}}"/>
+          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>
+        </target>
+      </trans-unit>
+      <trans-unit id="7473277035156704795" datatype="html">
+        <source>New uploads are encrypted automatically. Use this after you copied new files into the photo folder directly: it encrypts the files that are not encrypted yet.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">37,38</context>
+        </context-group>
+        <target>New uploads are encrypted automatically. Use this after you copied new files into the photo folder directly: it encrypts the files that are not encrypted yet.</target>
+      </trans-unit>
+      <trans-unit id="7909282305064280601" datatype="html">
+        <source>Encrypt files that are not encrypted yet</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+        <target>Encrypt files that are not encrypted yet</target>
+      </trans-unit>
+      <trans-unit id="245137512627320733" datatype="html">
+        <source>Encrypting...</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">55,56</context>
+        </context-group>
+        <target>Encrypting...</target>
+      </trans-unit>
+      <trans-unit id="3133539296286953705" datatype="html">
+        <source>Stop</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">56,57</context>
+        </context-group>
+        <target>Stop</target>
+      </trans-unit>
+      <trans-unit id="2847134412781168566" datatype="html">
+        <source>Done.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">60,61</context>
+        </context-group>
+        <target>Done.</target>
+      </trans-unit>
+      <trans-unit id="2780313760159406067" datatype="html">
+        <source>The job failed, see the log below.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">63,64</context>
+        </context-group>
+        <target>The job failed, see the log below.</target>
+      </trans-unit>
+      <trans-unit id="2378368924902467595" datatype="html">
+        <source>
+          Encrypted: , already encrypted: 
+          <x id="INTERPOLATION" equiv-text="{{progress.steps.processed}}"/>
+          <x id="INTERPOLATION_1" equiv-text="{{progress.steps.skipped}}"/>
+        </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.html</context>
+          <context context-type="linenumber">65,66</context>
+        </context-group>
+        <target>
+          Encrypted: , already encrypted: 
+          <x id="INTERPOLATION" equiv-text="{{progress.steps.processed}}"/>
+          <x id="INTERPOLATION_1" equiv-text="{{progress.steps.skipped}}"/>
+        </target>
+      </trans-unit>
+      <trans-unit id="1200144142142292582" datatype="html">
+        <source>Could not start the encryption.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.ts</context>
+          <context context-type="linenumber">80</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/encryption/encryption.component.ts</context>
+          <context context-type="linenumber">93</context>
+        </context-group>
+        <target>Could not start the encryption.</target>
+      </trans-unit>
       <trans-unit id="7163150931703189652" datatype="html">
         <source>Something went spectacularly wrong. We've sent our best squirrels to look into it.</source>
         <context-group purpose="location">
@@ -5008,7 +5202,7 @@
         <source>key: c</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/frame/frame.component.html</context>
-          <context context-type="linenumber">206</context>
+          <context context-type="linenumber">213</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/lightbox/controls/controls.lightbox.gallery.component.html</context>
@@ -5020,7 +5214,7 @@
         <source>Fix navbar</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/frame/frame.component.html</context>
-          <context context-type="linenumber">206,207</context>
+          <context context-type="linenumber">213,214</context>
         </context-group>
         <target>Fix navigationsbar</target>
       </trans-unit>
@@ -5028,7 +5222,7 @@
         <source>Automatically shows new photos and videos</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/frame/frame.component.html</context>
-          <context context-type="linenumber">219</context>
+          <context context-type="linenumber">226</context>
         </context-group>
         <target>Automatically shows new photos and videos</target>
       </trans-unit>
@@ -5036,7 +5230,7 @@
         <source>Auto update gallery</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/frame/frame.component.html</context>
-          <context context-type="linenumber">220,221</context>
+          <context context-type="linenumber">227,228</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/photo-frame-builder/photo-frame-builder.gallery.component.html</context>
@@ -5048,7 +5242,7 @@
         <source>Settings</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/frame/frame.component.html</context>
-          <context context-type="linenumber">261</context>
+          <context context-type="linenumber">268</context>
         </context-group>
         <target>Indstillinger</target>
       </trans-unit>
@@ -5056,7 +5250,7 @@
         <source>Logout</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/frame/frame.component.html</context>
-          <context context-type="linenumber">269</context>
+          <context context-type="linenumber">276</context>
         </context-group>
         <target>Log ud</target>
       </trans-unit>

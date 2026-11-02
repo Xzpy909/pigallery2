@@ -4,8 +4,63 @@ import {ObjectManagers} from '../../model/ObjectManagers';
 import {StatisticDTO} from '../../../common/entities/settings/StatisticDTO';
 import {MessengerRepository} from '../../model/messenger/MessengerRepository';
 import {JobStartDTO} from '../../../common/entities/job/JobDTO';
+import {Config} from '../../../common/config/private/Config';
+import {EncryptionManager} from '../../model/encryption/EncryptionManager';
+import {EncryptionStatusDTO} from '../../../common/entities/EncryptionStatusDTO';
+import {Logger} from '../../Logger';
 
 export class AdminMWs {
+
+  public static getEncryptionStatus(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): void {
+    req.resultPipe = {
+      enabled: EncryptionManager.isEnabled(),
+      unlockUser: EncryptionManager.getUnlockUser(),
+      currentUser: req.session?.context?.user?.name,
+      minPasswordLength: EncryptionManager.MIN_PASSWORD_LENGTH,
+    } as EncryptionStatusDTO;
+    return next();
+  }
+
+  /**
+   * First time setup: the password of the logged in user becomes the key of the gallery.
+   * The password is asked again (and checked against the account), as a stolen session must not be enough to
+   * set the key, and a wrong password here would make the gallery impossible to unlock later.
+   */
+  public static async setupEncryption(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const name = req.session?.context?.user?.name;
+    const password = req.body?.password;
+    if (Config.Users.authenticationRequired !== true || !name || typeof password !== 'string' || password.length === 0) {
+      return next(new ErrorDTO(ErrorCodes.INPUT_ERROR, 'The password of the logged in user is needed.'));
+    }
+    if (EncryptionManager.isEnabled()) {
+      return next(new ErrorDTO(ErrorCodes.SETTINGS_ERROR, 'The gallery is already encrypted.'));
+    }
+    try {
+      try {
+        const user = await ObjectManagers.getInstance().UserManager.findOne({name, password});
+        if (!user) {
+          throw new Error('not found');
+        }
+      } catch (e) {
+        Logger.warn('AdminMWs', 'Encryption setup refused for `' + name + '` from IP `' + req.ip + '`: bad password');
+        return next(new ErrorDTO(ErrorCodes.CREDENTIAL_NOT_FOUND, 'Wrong password.'));
+      }
+      await EncryptionManager.setup(name, password);
+      Logger.info('AdminMWs', 'The gallery is encrypted from now on, unlocked by `' + name + '`.');
+      req.resultPipe = 'ok';
+      return next();
+    } catch (err) {
+      return next(new ErrorDTO(ErrorCodes.SETTINGS_ERROR, (err as Error).message, err as Error));
+    }
+  }
   public static async loadStatistic(
     req: Request,
     res: Response,

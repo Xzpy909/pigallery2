@@ -78,6 +78,8 @@ export class BackendtextService {
         return $localize`Delete Compressed GPX`;
       case DefaultsJobs['Top Pick Sending']:
         return $localize`Top Pick Sending`;
+      case DefaultsJobs['Media Encryption']:
+        return $localize`Media encryption`;
       default:
         return null;
     }
@@ -111,6 +113,8 @@ export class BackendtextService {
         return $localize`Deletes all compressed GPX files`;
       case DefaultsJobs['Top Pick Sending']:
         return $localize`Gets the top photos of the selected search queries and sends them over email. You need to set up the SMTP server connection to send e-mails.`;
+      case DefaultsJobs['Media Encryption']:
+        return $localize`Encrypts all photos, videos and meta files that are not encrypted yet. It is available once the gallery is encrypted (Tools / Encrypt media files).`;
       default:
         return null;
     }
