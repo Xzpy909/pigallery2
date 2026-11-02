@@ -1,42 +1,37 @@
-# PiGallery2
-![GitHub package.json version](https://img.shields.io/github/package-json/v/bpatrik/pigallery2)
-[![Coverage Status](https://coveralls.io/repos/github/bpatrik/pigallery2/badge.svg?branch=master)](https://coveralls.io/github/bpatrik/pigallery2?branch=master)
-[![Docker build](https://github.com/bpatrik/pigallery2/workflows/docker-buildx/badge.svg)](https://github.com/bpatrik/pigallery2/actions)
+# PiGallery2 Encrypted
 
-PiGallery2 is a **fast** directory-first photo gallery website, optimized for running on low-resource servers (especially on Raspberry Pi).
+A fork of [PiGallery2](https://github.com/bpatrik/pigallery2), the fast, directory-first photo gallery for low-resource servers (such as a Raspberry Pi).
+This fork keeps the whole gallery **encrypted on disk** and decrypts it only while you are viewing it. It also adds basic file management to the gallery, so you can organize your photos without leaving the browser.
 
-## 🚀 Key Features
-- **⚡ Fast**: Optimized for low-end hardware.
-- **✔️ Simple**: Point to your photos and you are ready.
-- **📁 Directory-first**: Shows your folder structure as it is.
-- **Read-only**: Your photo folder is never modified.
+This fork is not kept compatible with upstream.
 
-[Full documentation here](http://bpatrik.github.io/pigallery2/).
+## What is different from upstream
 
-[Try our live demo!](https://pigallery2.onrender.com/) (First load may take up to 60s while the server boots up)
+### Encryption at rest
+- Photos, videos, sidecar and meta files are stored encrypted (AES-256-GCM). Thumbnails, converted photos and videos, and other generated files are encrypted too.
+- Files are decrypted only in memory, while they are sent to your browser or processed.
+- The key is protected by the login password of one gallery user. After every restart the gallery is locked until that user logs in. There is no password recovery, so keep the password in a password manager.
+- Existing galleries can be encrypted from the web UI (menu, `Encrypt media files`) or with a command line tool. New uploads are encrypted automatically (this can be switched off in the settings).
+- File and folder names and the database (metadata cache) are **not** encrypted.
 
-## 🏁 Getting Started
-The official and recommended way to run PiGallery2 is using **Docker**.
+Details, setup steps and limits: [docs/user-guide/encryption.md](docs/user-guide/encryption.md).
 
-### [Install with Docker (Recommended)](https://bpatrik.github.io/pigallery2/setup/docker)
+### Upload and file management
+- Drag and drop (or pick) whole folders to upload; the folder structure is recreated.
+- Select photos (checkmark on hover, select all) and move them to another folder.
+- Create new folders and rename folders from the gallery.
+- Uploading and editing use the same permission (`Upload` / `minimumRole`).
 
+## Keeps the upstream goals
+- **Fast**: optimized for low-end hardware.
+- **Simple**: point to your photos and you are ready.
+- **Directory-first**: shows your folder structure as it is.
 
-### [Native Installation (Unsupported)](https://bpatrik.github.io/pigallery2/setup/direct-install)
-Native installation is possible for users familiar with Node.js but is not officially supported.
+## Getting started
+Run it with Docker, like upstream. See the upstream [Docker setup guide](https://bpatrik.github.io/pigallery2/setup/docker) and build the image from this repository instead of pulling the upstream image.
+Then follow the [encryption guide](docs/user-guide/encryption.md) to turn encryption on.
 
-## 📖 Documentation
-For more detailed information, please see our [Documentation Website](http://bpatrik.github.io/pigallery2) or the `docs/` folder:
-- [FAQ (Frequently Asked Questions)](https://bpatrik.github.io/pigallery2/faq)
-- [Configuration Guide](https://bpatrik.github.io/pigallery2/user-guide/configuration)
-- [User Rights](https://bpatrik.github.io/pigallery2/user-guide/user-rights)
-- [Contribution Guide](https://bpatrik.github.io/pigallery2/development/contributing)
+Other documentation: [configuration](docs/user-guide/configuration.md), [user rights](docs/user-guide/user-rights.md), [upstream documentation site](http://bpatrik.github.io/pigallery2).
 
-## 🤝 Contributing
-Contributions are welcome! Please read our [Contribution Guide](https://bpatrik.github.io/pigallery2/development/contributing) to get started.
-Using an AI coding agent? See [AGENTS.md](AGENTS.md).
-
-## ⭐ Star History
-[![Star History Chart](https://api.star-history.com/svg?repos=bpatrik/pigallery2&type=date&legend=top-left)](https://www.star-history.com/#bpatrik/pigallery2&type=date&legend=top-left)
-
-## 📜 License
-PiGallery2 is licensed under the MIT License.
+## License
+MIT, same as upstream.
