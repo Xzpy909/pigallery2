@@ -36,6 +36,7 @@ export class MetadataLoader {
 
   @ExtensionDecorator(e => e.gallery.MetadataLoader.loadVideoMetadata)
   public static async loadVideoMetadata(fullPath: string): Promise<VideoMetadata> {
+    EncryptionManager.assertUnlocked();
     const metadata: VideoMetadata = {
       size: {
         width: 1,
@@ -190,6 +191,7 @@ export class MetadataLoader {
 
   @ExtensionDecorator(e => e.gallery.MetadataLoader.loadPhotoMetadata)
   public static async loadPhotoMetadata(fullPath: string): Promise<PhotoMetadata> {
+    EncryptionManager.assertUnlocked();
     const metadata: PhotoMetadata = {
       size: {width: 0, height: 0},
       creationDate: 0,

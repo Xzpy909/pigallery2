@@ -7,6 +7,7 @@ import {UserSettingsDTO} from '../../../common/entities/UserSettingsDTO';
 import {SearchQueryUtils} from '../../../common/SearchQueryUtils';
 import {Config} from '../../../common/config/private/Config';
 import {ObjectManagers} from '../ObjectManagers';
+import {EncryptionManager} from '../encryption/EncryptionManager';
 
 export class UserManager {
 
@@ -49,6 +50,10 @@ export class UserManager {
   public async deleteUser(id: number): Promise<UserEntity> {
     const connection = await SQLConnection.getConnection();
     const user = await connection.getRepository(UserEntity).findOneBy({id});
+    if (user && EncryptionManager.isEnabled() && user.name === EncryptionManager.getUnlockUser()) {
+      throw new Error('"' + user.name + '" unlocks the encrypted gallery, it can not be deleted. ' +
+        'Decrypt the gallery with the EncryptGallery tool first.');
+    }
     const ret = await connection.getRepository(UserEntity).remove(user);
     // ends the sessions of the user and of its sharings
     ObjectManagers.getInstance().SessionManager.invalidateSessionCache();
@@ -113,11 +118,32 @@ export class UserManager {
       user.blockDirectoryList = settings.blockDirectoryList ?? null;
     }
 
+    const oldPasswordHash = user.password;
+    const rewrapKey = !!settings.newPassword && settings.newPassword.length > 0 &&
+      EncryptionManager.isEnabled() && user.name === EncryptionManager.getUnlockUser();
+    if (rewrapKey && (EncryptionManager.isLocked() ||
+      settings.newPassword.length < EncryptionManager.MIN_PASSWORD_LENGTH)) {
+      // the password of this user is the key of the gallery
+      throw new Error(EncryptionManager.isLocked() ? 'The gallery is locked.' :
+        'The password of "' + user.name + '" is the encryption key of the gallery, use at least ' +
+        EncryptionManager.MIN_PASSWORD_LENGTH + ' characters.');
+    }
+
     if (settings.newPassword && settings.newPassword.length > 0) {
       user.password = PasswordHelper.cryptPassword(settings.newPassword);
     }
 
     const ret = await userRepository.save(user);
+    if (rewrapKey) {
+      try {
+        // the key file has to follow the login password, or the gallery could not be unlocked anymore
+        await EncryptionManager.rewrap(settings.newPassword);
+      } catch (e) {
+        user.password = oldPasswordHash;
+        await userRepository.save(user);
+        throw e;
+      }
+    }
     ObjectManagers.getInstance().SessionManager.invalidateSessionCache();
     return ret;
   }

@@ -42,7 +42,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1432</context>
+          <context context-type="linenumber">1394</context>
         </context-group>
         <target>Database</target>
       </trans-unit>
@@ -1278,83 +1278,11 @@
         </context-group>
         <target>Logs</target>
       </trans-unit>
-      <trans-unit id="4816216590591222133" datatype="html">
-        <source>Enabled</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1365</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/common/config/private/subconfigs/ServerExtensionsConfig.ts</context>
-          <context context-type="linenumber">23</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/common/config/public/ClientConfig.ts</context>
-          <context context-type="linenumber">1559</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/common/config/public/ClientConfig.ts</context>
-          <context context-type="linenumber">1734</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/common/config/public/ClientConfig.ts</context>
-          <context context-type="linenumber">1804</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/common/config/public/ClientConfig.ts</context>
-          <context context-type="linenumber">1816</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/frontend/app/ui/settings/template/template.component.html</context>
-          <context context-type="linenumber">12,13</context>
-        </context-group>
-        <target>Ingeschakeld</target>
-      </trans-unit>
-      <trans-unit id="2454696034756486280" datatype="html">
-        <source>Encrypts the photos, videos and meta files of the gallery (and everything generated from them: thumbnails, converted videos) on the disk. They are only decrypted in memory while they are viewed. Existing files are encrypted with the EncryptGallery tool (see the Encryption page of the user guide). File and folder names and the database are not encrypted.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1369</context>
-        </context-group>
-        <target>Encrypts the photos, videos and meta files of the gallery (and everything generated from them: thumbnails, converted videos) on the disk. They are only decrypted in memory while they are viewed. Existing files are encrypted with the EncryptGallery tool (see the Encryption page of the user guide). File and folder names and the database are not encrypted.</target>
-      </trans-unit>
-      <trans-unit id="1755805413339441073" datatype="html">
-        <source>Passphrase</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1377</context>
-        </context-group>
-        <target>Passphrase</target>
-      </trans-unit>
-      <trans-unit id="2886198050938656486" datatype="html">
-        <source>The encryption key is derived from this passphrase. If you lose it, the encrypted files can not be recovered. Prefer setting it with the PG2_ENCRYPTION_PASSPHRASE environment variable, so it is not stored next to the encrypted data.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1382</context>
-        </context-group>
-        <target>The encryption key is derived from this passphrase. If you lose it, the encrypted files can not be recovered. Prefer setting it with the PG2_ENCRYPTION_PASSPHRASE environment variable, so it is not stored next to the encrypted data.</target>
-      </trans-unit>
-      <trans-unit id="3927162305549584945" datatype="html">
-        <source>Key file</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1390</context>
-        </context-group>
-        <target>Key file</target>
-      </trans-unit>
-      <trans-unit id="5856583467681754312" datatype="html">
-        <source>Path of a file with the key. Used instead of the passphrase. It can contain 64 hex characters (a raw 256 bit key) or any text that is used as a passphrase. Keep this file away from the encrypted data.</source>
-        <context-group purpose="location">
-          <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1396</context>
-        </context-group>
-        <target>Path of a file with the key. Used instead of the passphrase. It can contain 64 hex characters (a raw 256 bit key) or any text that is used as a passphrase. Keep this file away from the encrypted data.</target>
-      </trans-unit>
       <trans-unit id="3619951690451500546" datatype="html">
         <source>Scratch folder</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1403</context>
+          <context context-type="linenumber">1365</context>
         </context-group>
         <target>Scratch folder</target>
       </trans-unit>
@@ -1362,7 +1290,7 @@
         <source>Video transcoding needs to write the transcoded video as a plain file before it can be encrypted. It is stored here and deleted right after. Use a RAM disk (e.g.: /dev/shm) to keep it off the disk. Empty means the temp folder of the OS.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1409</context>
+          <context context-type="linenumber">1371</context>
         </context-group>
         <target>Video transcoding needs to write the transcoded video as a plain file before it can be encrypted. It is stored here and deleted right after. Use a RAM disk (e.g.: /dev/shm) to keep it off the disk. Empty means the temp folder of the OS.</target>
       </trans-unit>
@@ -1370,7 +1298,7 @@
         <source>Server</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1423</context>
+          <context context-type="linenumber">1385</context>
         </context-group>
         <target>Server</target>
       </trans-unit>
@@ -1378,7 +1306,7 @@
         <source>Users</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1441</context>
+          <context context-type="linenumber">1403</context>
         </context-group>
         <target>Gebruikers</target>
       </trans-unit>
@@ -1386,7 +1314,7 @@
         <source>Indexing</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1450</context>
+          <context context-type="linenumber">1412</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
@@ -1398,7 +1326,7 @@
         <source>If you add a new folder to your gallery, the site indexes it automatically.  If you would like to trigger indexing manually, click index button. (Note: search only works among the indexed directories.)</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1455</context>
+          <context context-type="linenumber">1417</context>
         </context-group>
         <target>Als een nieuwe map wordt toegevoegd in de galerij, wordt deze automatisch geïndexeerd. Als handmatig indexeren gewenst is, klik op de index knop. (Opmerking: zoeken werkt alleen in geïndexeerde mappen).</target>
       </trans-unit>
@@ -1406,7 +1334,7 @@
         <source>Media</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1467</context>
+          <context context-type="linenumber">1429</context>
         </context-group>
         <target>Media</target>
       </trans-unit>
@@ -1414,7 +1342,7 @@
         <source>Meta file</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1476</context>
+          <context context-type="linenumber">1438</context>
         </context-group>
         <target>Metabestanden</target>
       </trans-unit>
@@ -1422,7 +1350,7 @@
         <source>Album cover</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1485</context>
+          <context context-type="linenumber">1447</context>
         </context-group>
         <target>Album cover</target>
       </trans-unit>
@@ -1430,7 +1358,7 @@
         <source>Specify a search query and sorting that the app can use to pick the best photo for an album and folder cover. There is no way to manually pick folder and album cover in the app. You can tag some of your photos with 'cover' and set that as search query or rate them to 5 and set sorting to descending by rating.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1496</context>
+          <context context-type="linenumber">1458</context>
         </context-group>
         <target>Specificeer een zoekopdracht en sortering waarmee de app de beste foto kan kiezen voor een album en folder cover. Er kan niet handmatig worden gekozen voor een bepaalde foto. Er kan een foto worden getagged met 'cover', gebruik daarna een zoekopdracht om deze te selecteren.</target>
       </trans-unit>
@@ -1438,7 +1366,7 @@
         <source>Sharing</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1503</context>
+          <context context-type="linenumber">1465</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/share/share.gallery.component.html</context>
@@ -1458,7 +1386,7 @@
         <source>Duplicates</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1512</context>
+          <context context-type="linenumber">1474</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/duplicates/duplicates.component.ts</context>
@@ -1474,7 +1402,7 @@
         <source>Messaging</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1521</context>
+          <context context-type="linenumber">1483</context>
         </context-group>
         <target>Berichten</target>
       </trans-unit>
@@ -1482,7 +1410,7 @@
         <source>The App can send messages (like photos on the same day a year ago. aka: "Top Pick"). Here you can configure the delivery method.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1525</context>
+          <context context-type="linenumber">1487</context>
         </context-group>
         <target>De app kan berichten versturen (zoals foto's van dezelfde dag vorig jaar). Hier kan de bezorgmethode worden geconfigureerd.</target>
       </trans-unit>
@@ -1490,7 +1418,7 @@
         <source>Extensions</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1533</context>
+          <context context-type="linenumber">1495</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/public/ClientConfig.ts</context>
@@ -1502,7 +1430,7 @@
         <source>Upload</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1542</context>
+          <context context-type="linenumber">1504</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/public/ClientConfig.ts</context>
@@ -1518,7 +1446,7 @@
         <source>Encryption</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1551</context>
+          <context context-type="linenumber">1513</context>
         </context-group>
         <target>Encryption</target>
       </trans-unit>
@@ -1526,7 +1454,7 @@
         <source>Jobs</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1560</context>
+          <context context-type="linenumber">1522</context>
         </context-group>
         <target>Taken</target>
       </trans-unit>
@@ -1645,6 +1573,34 @@
           <context context-type="linenumber">114</context>
         </context-group>
         <target>De app gebruit Nodemailer op de achtergrond om e-mails te versturen. Kijk op https://nodemailer.com/usage/ voor meer informatie.</target>
+      </trans-unit>
+      <trans-unit id="4816216590591222133" datatype="html">
+        <source>Enabled</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/common/config/private/subconfigs/ServerExtensionsConfig.ts</context>
+          <context context-type="linenumber">23</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/common/config/public/ClientConfig.ts</context>
+          <context context-type="linenumber">1559</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/common/config/public/ClientConfig.ts</context>
+          <context context-type="linenumber">1734</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/common/config/public/ClientConfig.ts</context>
+          <context context-type="linenumber">1804</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/common/config/public/ClientConfig.ts</context>
+          <context context-type="linenumber">1816</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/settings/template/template.component.html</context>
+          <context context-type="linenumber">12,13</context>
+        </context-group>
+        <target>Ingeschakeld</target>
       </trans-unit>
       <trans-unit id="4053091316351372803" datatype="html">
         <source>Extension folder</source>

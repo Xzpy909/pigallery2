@@ -105,8 +105,12 @@ export class Server {
       [Config.Server.apiPath + '/user/me', Config.Server.apiPath + '/share/:' + QueryParams.gallery.sharingKey_params],
     );
 
-    // fails closed: with encryption enabled the server does not start without the right key
+    // an encrypted gallery starts locked, the login of the unlock user loads the key
     await EncryptionManager.init();
+    if (EncryptionManager.isEnabled() && Config.Users.authenticationRequired === false) {
+      throw new Error('The gallery is encrypted, it can only be unlocked by logging in. ' +
+        'Enable Users / Authentication required, or decrypt the gallery with the EncryptGallery tool.');
+    }
     PhotoProcessing.init();
     Localizations.init();
 

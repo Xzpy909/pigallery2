@@ -208,9 +208,6 @@ App CLI options:
   --Messaging-Email-smtp-requireTLS                                         if this is true and secure is false then Nodemailer (used library in the background) tries to use STARTTLS. See https://nodemailer.com/smtp/#tls-options for more details (default: true)
   --Messaging-Email-smtp-user                                               User to connect to the SMTP server. (default: '')
   --Messaging-Email-smtp-password                                           Password to connect to the SMTP server. (default: '')
-  --Encryption-enabled                                                      Encrypts the photos, videos and meta files of the gallery (and everything generated from them: thumbnails, converted videos) on the disk. They are only decrypted in memory while they are viewed. Existing files are encrypted with the EncryptGallery tool (see the Encryption page of the user guide). File and folder names and the database are not encrypted. (default: false)
-  --Encryption-passphrase                                                   The encryption key is derived from this passphrase. If you lose it, the encrypted files can not be recovered. Prefer setting it with the PG2_ENCRYPTION_PASSPHRASE environment variable, so it is not stored next to the encrypted data. (default: '')
-  --Encryption-keyFile                                                      Path of a file with the key. Used instead of the passphrase. It can contain 64 hex characters (a raw 256 bit key) or any text that is used as a passphrase. Keep this file away from the encrypted data. (default: '')
   --Encryption-scratchFolder                                                Video transcoding needs to write the transcoded video as a plain file before it can be encrypted. It is stored here and deleted right after. Use a RAM disk (e.g.: /dev/shm) to keep it off the disk. Empty means the temp folder of the OS. (default: '')
   --Jobs-maxSavedProgress                                                   Job history size. (default: 20)
   --Jobs-mediaProcessingBatchSize                                           Jobs load this many photos or videos from the DB for processing at once. (default: 1000)
@@ -405,11 +402,6 @@ Environmental variables:
   Messaging-Email-smtp-requireTLS                                       if this is true and secure is false then Nodemailer (used library in the background) tries to use STARTTLS. See https://nodemailer.com/smtp/#tls-options for more details (default: true)
   Messaging-Email-smtp-user                                             User to connect to the SMTP server. (default: '')
   Messaging-Email-smtp-password                                         Password to connect to the SMTP server. (default: '')
-  Encryption-enabled                                                    Encrypts the photos, videos and meta files of the gallery (and everything generated from them: thumbnails, converted videos) on the disk. They are only decrypted in memory while they are viewed. Existing files are encrypted with the EncryptGallery tool (see the Encryption page of the user guide). File and folder names and the database are not encrypted. (default: false)
-  Encryption-passphrase                                                 The encryption key is derived from this passphrase. If you lose it, the encrypted files can not be recovered. Prefer setting it with the PG2_ENCRYPTION_PASSPHRASE environment variable, so it is not stored next to the encrypted data. (default: '')
-  PG2_ENCRYPTION_PASSPHRASE                                              same as Encryption-passphrase
-  Encryption-keyFile                                                    Path of a file with the key. Used instead of the passphrase. It can contain 64 hex characters (a raw 256 bit key) or any text that is used as a passphrase. Keep this file away from the encrypted data. (default: '')
-  PG2_ENCRYPTION_KEY_FILE                                                same as Encryption-keyFile
   Encryption-scratchFolder                                              Video transcoding needs to write the transcoded video as a plain file before it can be encrypted. It is stored here and deleted right after. Use a RAM disk (e.g.: /dev/shm) to keep it off the disk. Empty means the temp folder of the OS. (default: '')
   Jobs-maxSavedProgress                                                 Job history size. (default: 20)
   Jobs-mediaProcessingBatchSize                                         Jobs load this many photos or videos from the DB for processing at once. (default: 1000)
@@ -1175,12 +1167,6 @@ Environmental variables:
         }
     },
     "Encryption": {
-        "//[enabled]": "Encrypts the photos, videos and meta files of the gallery (and everything generated from them: thumbnails, converted videos) on the disk. They are only decrypted in memory while they are viewed. Existing files are encrypted with the EncryptGallery tool (see the Encryption page of the user guide). File and folder names and the database are not encrypted.",
-        "enabled": false,
-        "//[passphrase]": "The encryption key is derived from this passphrase. If you lose it, the encrypted files can not be recovered. Prefer setting it with the PG2_ENCRYPTION_PASSPHRASE environment variable, so it is not stored next to the encrypted data.",
-        "passphrase": "",
-        "//[keyFile]": "Path of a file with the key. Used instead of the passphrase. It can contain 64 hex characters (a raw 256 bit key) or any text that is used as a passphrase. Keep this file away from the encrypted data.",
-        "keyFile": "",
         "//[scratchFolder]": "Video transcoding needs to write the transcoded video as a plain file before it can be encrypted. It is stored here and deleted right after. Use a RAM disk (e.g.: /dev/shm) to keep it off the disk. Empty means the temp folder of the OS.",
         "scratchFolder": ""
     },
