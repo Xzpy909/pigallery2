@@ -1,6 +1,7 @@
 import {DirectoryBaseDTO, DirectoryDTOUtils, DirectoryPathDTO, ParentDirectoryDTO} from '../../../common/entities/DirectoryDTO';
 import {DirectoryEntity} from './enitites/DirectoryEntity';
 import {SQLConnection} from './SQLConnection';
+import {EncryptionManager} from '../encryption/EncryptionManager';
 import {PhotoEntity, PhotoMetadataEntity} from './enitites/PhotoEntity';
 import {Utils} from '../../../common/Utils';
 import {PhotoMetadata,} from '../../../common/entities/PhotoDTO';
@@ -56,7 +57,7 @@ export class IndexingManager {
           fullMediaPath
         );
         const savedSearches: { name: string; searchQuery: SearchQueryDTO }[] =
-          JSON.parse(await fs.promises.readFile(fullMediaPath, 'utf8'));
+          JSON.parse((await EncryptionManager.readFile(fullMediaPath)).toString('utf8'));
         for (const s of savedSearches) {
           await ObjectManagers.getInstance().AlbumManager.addIfNotExistSavedSearch(
             s.name,

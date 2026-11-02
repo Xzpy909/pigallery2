@@ -1358,6 +1358,60 @@ export class ServerUploadConfig extends ClientUploadConfig {
 }
 
 @SubConfigClass<TAGS>({softReadonly: true})
+export class ServerEncryptionConfig {
+  @ConfigProperty({
+    type: 'boolean',
+    tags: {
+      name: $localize`Enabled`,
+      priority: ConfigPriority.basic,
+      uiResetNeeded: {server: true},
+    } as TAGS,
+    description: $localize`Encrypts the photos, videos and meta files of the gallery (and everything generated from them: thumbnails, converted videos) on the disk. They are only decrypted in memory while they are viewed. Existing files are encrypted with the EncryptGallery tool (see the Encryption page of the user guide). File and folder names and the database are not encrypted.`
+  })
+  enabled: boolean = false;
+
+  @ConfigProperty({
+    type: 'password',
+    envAlias: 'PG2_ENCRYPTION_PASSPHRASE',
+    tags: {
+      name: $localize`Passphrase`,
+      priority: ConfigPriority.basic,
+      uiOptional: true,
+      uiResetNeeded: {server: true},
+    } as TAGS,
+    description: $localize`The encryption key is derived from this passphrase. If you lose it, the encrypted files can not be recovered. Prefer setting it with the PG2_ENCRYPTION_PASSPHRASE environment variable, so it is not stored next to the encrypted data.`
+  })
+  passphrase: string = '';
+
+  @ConfigProperty({
+    type: 'string',
+    envAlias: 'PG2_ENCRYPTION_KEY_FILE',
+    tags: {
+      name: $localize`Key file`,
+      priority: ConfigPriority.advanced,
+      uiOptional: true,
+      uiResetNeeded: {server: true},
+      dockerSensitive: true
+    } as TAGS,
+    description: $localize`Path of a file with the key. Used instead of the passphrase. It can contain 64 hex characters (a raw 256 bit key) or any text that is used as a passphrase. Keep this file away from the encrypted data.`
+  })
+  keyFile: string = '';
+
+  @ConfigProperty({
+    type: 'string',
+    tags: {
+      name: $localize`Scratch folder`,
+      priority: ConfigPriority.underTheHood,
+      uiOptional: true,
+      uiResetNeeded: {server: true},
+      dockerSensitive: true
+    } as TAGS,
+    description: $localize`Video transcoding needs to write the transcoded video as a plain file before it can be encrypted. It is stored here and deleted right after. Use a RAM disk (e.g.: /dev/shm) to keep it off the disk. Empty means the temp folder of the OS.`
+  })
+  scratchFolder: string = '';
+}
+
+@SubConfigClass<TAGS>({softReadonly: true})
 export class ServerConfig extends ClientConfig {
 
   @ConfigProperty({type: ServerEnvironmentConfig, volatile: true})
@@ -1490,6 +1544,15 @@ export class ServerConfig extends ClientConfig {
     } as TAGS
   })
   Upload: ServerUploadConfig = new ServerUploadConfig();
+
+  @ConfigProperty({
+    type: ServerEncryptionConfig,
+    tags: {
+      name: $localize`Encryption`,
+      uiIcon: 'ionLockClosedOutline'
+    } as TAGS
+  })
+  Encryption: ServerEncryptionConfig = new ServerEncryptionConfig();
 
   @ConfigProperty({
     type: ServerJobConfig,

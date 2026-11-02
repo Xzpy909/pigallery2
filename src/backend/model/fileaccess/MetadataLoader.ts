@@ -17,8 +17,10 @@ import {Utils} from '../../../common/Utils';
 import {FFmpegFactory} from '../FFmpegFactory';
 import {ExtensionDecorator} from '../extension/ExtensionDecorator';
 import {DateTags} from './MetadataCreationDate';
+import {EncryptionManager} from '../encryption/EncryptionManager';
 
 const {imageSizeFromFile} = require('image-size/fromFile');
+const {imageSize} = require('image-size');
 const LOG_TAG = '[MetadataLoader]';
 const ffmpeg = FFmpegFactory.get();
 
@@ -48,7 +50,7 @@ export class MetadataLoader {
 
     try {
       const stat = fs.statSync(fullPath);
-      metadata.fileSize = stat.size;
+      metadata.fileSize = await EncryptionManager.getPlainSize(fullPath); // size of the content if it is encrypted
       metadata.creationDate = stat.mtime.getTime(); //Default date is file system time of last modification
     } catch (err) {
       console.log(err);
@@ -56,11 +58,17 @@ export class MetadataLoader {
     }
     try {
 
-
-      const data: FfprobeData = await util.promisify<FfprobeData>(
-        // wrap to arrow function otherwise 'this' is lost for ffprobe
-        (cb) => ffmpeg(fullPath).ffprobe(cb)
-      )();
+      // encrypted videos are read through a loopback URL, so there is no decrypted copy on the disk
+      const ffmpegInput = await EncryptionManager.getFfmpegInput(fullPath);
+      let data: FfprobeData;
+      try {
+        data = await util.promisify<FfprobeData>(
+          // wrap to arrow function otherwise 'this' is lost for ffprobe
+          (cb) => ffmpeg(ffmpegInput.input).ffprobe(cb)
+        )();
+      } finally {
+        ffmpegInput.release();
+      }
 
       try {
         for (const stream of data.streams) {
@@ -160,7 +168,7 @@ export class MetadataLoader {
 
         for (const sidecarPath of sidecarPaths) {
           if (fs.existsSync(sidecarPath)) {
-            const sidecarData: any = await exifr.sidecar(sidecarPath);
+            const sidecarData: any = await exifr.sidecar(await EncryptionManager.getImageSource(sidecarPath));
             if (sidecarData !== undefined) {
               // sidecar should not change the video dimension
               MetadataLoader.mapMetadata(metadata, sidecarData, false);
@@ -202,16 +210,19 @@ export class MetadataLoader {
       mergeOutput: false //don't merge output, because things like Microsoft Rating (percent) and xmp.rating will be merged
     };
     try {
+      // The path of a plain file, or the decrypted content (in memory only) of an encrypted one.
+      // Decrypted once, and used by every library below.
+      const source = await EncryptionManager.getImageSource(fullPath);
       try {
         const stat = fs.statSync(fullPath);
-        metadata.fileSize = stat.size;
+        metadata.fileSize = await EncryptionManager.getPlainSize(fullPath); // size of the content if it is encrypted
         metadata.creationDate = stat.mtime.getTime();
       } catch (err) {
         // ignoring errors
       }
       try {
         //read the actual image size, don't rely on tags for this
-        const info = await imageSizeFromFile(fullPath);
+        const info = typeof source === 'string' ? await imageSizeFromFile(source) : imageSize(source);
         metadata.size = {width: info.width, height: info.height};
       } catch (e) {
         //in case of failure, set dimensions to 0 so they may be read via tags
@@ -227,7 +238,7 @@ export class MetadataLoader {
 
       try {
         try {
-          const exif = await exifr.parse(fullPath, exifrOptions);
+          const exif = await exifr.parse(source, exifrOptions);
           MetadataLoader.mapMetadata(metadata, exif, true);
           if (exif?.makerNote) {
             const contentId = MetadataLoader.parseAppleMakerNoteContentId(exif.makerNote);
@@ -237,7 +248,7 @@ export class MetadataLoader {
           }
         } catch (err) {
           try {
-            const m = await sharp(fullPath, {failOnError: false}).metadata();
+            const m = await sharp(source, {failOnError: false}).metadata();
             MetadataLoader.mapMetadata(metadata, this.mapExifReader(exifReader(m.exif)), true);
           } catch (e) {
             // ignoring errors
@@ -256,7 +267,7 @@ export class MetadataLoader {
 
           for (const sidecarPath of sidecarPaths) {
             if (fs.existsSync(sidecarPath)) {
-              const sidecarData: any = await exifr.sidecar(sidecarPath, exifrOptions);
+              const sidecarData: any = await exifr.sidecar(await EncryptionManager.getImageSource(sidecarPath), exifrOptions);
               if (sidecarData !== undefined) {
                 //note that since side cars are loaded last, data loaded here overwrites embedded metadata (in Pigallery2, not in the actual files)
                 // sidecar should not change the image dimension

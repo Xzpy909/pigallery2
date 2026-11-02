@@ -7,6 +7,7 @@ import {ObjectManagers} from './ObjectManagers';
 import {DiskManager} from './fileaccess/DiskManager';
 import {Config} from '../../common/config/private/Config';
 import {PG2ConfMap} from '../../common/PG2ConfMap';
+import {EncryptionManager} from './encryption/EncryptionManager';
 
 export interface UploadError {
   filename: string;
@@ -76,6 +77,7 @@ export class UploadManager {
       await fs.promises.mkdir(fullDirPath, {recursive: true});
     }
 
-    await fs.promises.writeFile(fullFilePath, file.buffer);
+    // encrypted before it reaches the disk, if encryption is enabled
+    await EncryptionManager.writeFile(fullFilePath, file.buffer);
   }
 }

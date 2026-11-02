@@ -6,6 +6,7 @@ import {ProjectPath} from '../../../../src/backend/ProjectPath';
 import {Config} from '../../../../src/common/config/private/Config';
 import {ObjectManagers} from '../../../../src/backend/model/ObjectManagers';
 import {TestHelper} from '../../../TestHelper';
+import {EncryptionManager} from '../../../../src/backend/model/encryption/EncryptionManager';
 
 declare const describe: any;
 declare const before: any;
@@ -229,5 +230,23 @@ describe('UploadManager', () => {
     expect(errors.length).to.equal(1);
     expect(errors[0].filename).to.equal('exists.jpg');
     expect(errors[0].error).to.contain('already exists');
+  });
+
+  it('should store an uploaded file encrypted when encryption is enabled', async () => {
+    Config.Encryption.enabled = true;
+    EncryptionManager.setKeyForTesting(Buffer.alloc(32, 7));
+    try {
+      const content = Buffer.from('secret image content');
+      await uploadManager.saveFile('enc_subdir', {originalname: 'secret.jpg', buffer: content} as any);
+
+      const savedPath = path.join(testDir, 'enc_subdir', 'secret.jpg');
+      const onDisk = fs.readFileSync(savedPath);
+      expect(onDisk.includes(content)).to.be.false;
+      expect(await EncryptionManager.isEncrypted(savedPath)).to.be.true;
+      expect((await EncryptionManager.readFile(savedPath)).equals(content)).to.be.true;
+    } finally {
+      Config.Encryption.enabled = false;
+      EncryptionManager.setKeyForTesting(null);
+    }
   });
 });
