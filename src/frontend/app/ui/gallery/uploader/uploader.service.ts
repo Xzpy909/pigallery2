@@ -18,6 +18,7 @@ export interface UploadProgress {
   progress: number;
   status: 'queued' | 'uploading';
   toast: ToastRef;
+  bulk?: boolean; // part of a big batch: no toast of its own, see UploaderService.BULK_THRESHOLD
   request?: Subscription; // unsubscribing aborts the upload
 }
 
@@ -39,6 +40,14 @@ export class UploaderService {
   private toastService = inject(ToastService);
 
   private static readonly TOAST_GROUP = 'uploads';
+  // Above this many files there is no toast per file (thousands of toasts freeze the page), only one for the whole batch
+  public static readonly BULK_THRESHOLD = 50;
+  private static readonly NO_TOAST: ToastRef = {update: (): void => undefined, close: (): void => undefined};
+  private bulkToast: ToastRef = null;
+  private bulkTotal = 0;
+  private bulkDone = 0;
+  private bulkTimer: ReturnType<typeof setTimeout> = null;
+  private bulkErrors: string[] = [];
   public uploadProgress: UploadProgress[] = [];
   // Result of the current batch: everything uploaded since the queue was last empty
   private batchUploaded = 0;
@@ -130,45 +139,54 @@ export class UploaderService {
     const progressItems: UploadProgress[] = [];
     const existingFiles: File[] = [];
 
+    const dir = this.contentLoaderService.content.value.directory;
+    const existingNames = new Set<string>([
+      ...(dir?.media || []).map(m => m.name),
+      ...(dir?.metaFile || []).map(m => m.name)
+    ]);
+    const toUpload: UploadEntry[] = [];
     for (const entry of supportedEntries) {
+      // files in new folders are checked by the server
+      if (!entry.relativeDir && existingNames.has(entry.file.name)) {
+        existingFiles.push(entry.file);
+      } else {
+        toUpload.push(entry);
+      }
+    }
+
+    const bulk = this.bulkToast !== null || toUpload.length > UploaderService.BULK_THRESHOLD;
+    if (bulk && toUpload.length > 0) {
+      this.openBulkToast(toUpload.length);
+    }
+
+    for (const entry of toUpload) {
       const f = entry.file;
       const displayName = entry.relativeDir ? entry.relativeDir + '/' + f.name : f.name;
-      // Check if the file already exists in the current directory (files in new folders are checked by the server)
-      const dir = this.contentLoaderService.content.value.directory;
-      let fileExists = false;
-      if (dir && !entry.relativeDir) {
-        fileExists = (dir.media && dir.media.some(m => m.name === f.name)) ||
-          (dir.metaFile && dir.metaFile.some(m => m.name === f.name));
-      }
-
-      if (fileExists) {
-        existingFiles.push(f);
-      } else {
-        const progressItem: UploadProgress = {
-          name: displayName,
-          progress: 0,
-          status: 'queued',
-          toast: null
-        };
-        progressItem.toast = this.toastService.open({
-          type: 'progress',
-          color: 'secondary',
-          title: displayName,
-          text: $localize`Queued`,
-          progress: 0,
-          group: UploaderService.TOAST_GROUP,
-          closable: false,
-          wrap: false,
-          onCancel: (): void => this.cancel(progressItem)
-        });
-        progressItems.push(progressItem);
-        this.uploadQueue.push({
-          file: f,
-          directory,
-          relativeDir: entry.relativeDir,
-          progressItem
-        });
-      }
+      const progressItem: UploadProgress = {
+        name: displayName,
+        progress: 0,
+        status: 'queued',
+        toast: null
+      };
+      progressItem.toast = bulk ? UploaderService.NO_TOAST : this.toastService.open({
+        type: 'progress',
+        color: 'secondary',
+        title: displayName,
+        text: $localize`Queued`,
+        progress: 0,
+        group: UploaderService.TOAST_GROUP,
+        closable: false,
+        wrap: false,
+        onCancel: (): void => this.cancel(progressItem)
+      });
+      progressItem.bulk = bulk;
+      progressItems.push(progressItem);
+      this.uploadQueue.push({
+        file: f,
+        directory,
+        relativeDir: entry.relativeDir,
+        progressItem
+      });
     }
 
     if (existingFiles.length > 0) {
@@ -305,6 +323,10 @@ export class UploaderService {
     this.batchCanceled++;
     progressItem.toast.close();
     if (queueIndex !== -1) {
+      if (progressItem.bulk) {
+        this.bulkTotal--; // it never starts
+        this.updateBulkToast();
+      }
       this.uploadQueue.splice(queueIndex, 1);
       this.uploadProgress.splice(this.uploadProgress.indexOf(progressItem), 1);
       this.finishBatchIfDone();
@@ -324,6 +346,14 @@ export class UploaderService {
   // An error needs the user's attention, so its toast stays until it is closed
   private onUploadFailed(progressItem: UploadProgress, error: string): void {
     this.batchFailed++;
+    if (progressItem.bulk) {
+      // no toast per file: the first errors are logged, the number is in the summary
+      if (this.bulkErrors.length < 20) {
+        this.bulkErrors.push(progressItem.name + ': ' + error);
+      }
+      this.onUploadFinished(progressItem);
+      return;
+    }
     progressItem.toast.update({
       type: 'error',
       color: undefined,
@@ -337,6 +367,10 @@ export class UploaderService {
   }
 
   private onUploadFinished(progressItem: UploadProgress): void {
+    if (progressItem.bulk) {
+      this.bulkDone++;
+      this.updateBulkToast();
+    }
     this.uploadProgress.splice(this.uploadProgress.indexOf(progressItem), 1);
     this.activeUploads--;
     this.processQueue();
@@ -349,6 +383,7 @@ export class UploaderService {
     }
 
     // The whole batch finished
+    this.closeBulkToast();
     this.MAX_CONCURRENT_UPLOADS = this.DEFAULT_MAX_CONCURRENT_UPLOADS; // Reset for next batch
     if (this.batchUploaded > 0) {
       this.contentLoaderService.reloadCurrentContent().catch(console.error);
@@ -366,8 +401,58 @@ export class UploaderService {
     } else {
       this.notificationService.error($localize`Failed files: ${this.batchFailed}:count:`, $localize`Upload failed.`);
     }
+    if (this.bulkErrors.length > 0) {
+      console.warn('Failed uploads (first ' + this.bulkErrors.length + '):\n' + this.bulkErrors.join('\n'));
+      this.bulkErrors = [];
+    }
     this.batchUploaded = 0;
     this.batchFailed = 0;
     this.batchCanceled = 0;
+  }
+
+  // One toast with the overall progress of a big batch
+  private openBulkToast(count: number): void {
+    this.bulkTotal += count;
+    if (this.bulkToast) {
+      this.updateBulkToast();
+      return;
+    }
+    this.bulkDone = 0;
+    this.bulkToast = this.toastService.open({
+      type: 'progress',
+      color: 'secondary',
+      title: $localize`Uploading files: ${this.bulkTotal}:count:`,
+      text: '0 / ' + this.bulkTotal,
+      progress: 0,
+      closable: false,
+      wrap: false,
+      onCancel: (): void => this.cancelAll()
+    });
+  }
+
+  // Throttled: thousands of files finish quickly and every update renders the toast
+  private updateBulkToast(): void {
+    if (!this.bulkToast || this.bulkTimer) {
+      return;
+    }
+    this.bulkTimer = setTimeout(() => {
+      this.bulkTimer = null;
+      this.bulkToast?.update({
+        title: $localize`Uploading files: ${this.bulkTotal}:count:`,
+        text: this.bulkDone + ' / ' + this.bulkTotal,
+        progress: this.bulkTotal > 0 ? Math.round(100 * this.bulkDone / this.bulkTotal) : 100
+      });
+    }, 250);
+  }
+
+  private closeBulkToast(): void {
+    if (this.bulkTimer) {
+      clearTimeout(this.bulkTimer);
+      this.bulkTimer = null;
+    }
+    this.bulkToast?.close();
+    this.bulkToast = null;
+    this.bulkTotal = 0;
+    this.bulkDone = 0;
   }
 }

@@ -202,4 +202,55 @@ describe('UploaderService', () => {
     expect(toast('Old/a.jpg')).toEqual(expect.objectContaining({type: 'warning'}));
     expect(notification.error).not.toHaveBeenCalled();
   });
+
+  describe('big batches', () => {
+    const many = (n: number): File[] => Array.from({length: n}, (_, i) => file('p' + i + '.jpg'));
+
+    it('should show one toast for the whole batch instead of one per file', async () => {
+      vi.useFakeTimers();
+      service.uploadFiles(many(UploaderService.BULK_THRESHOLD + 10));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(toasts.toasts().length).toBe(1);
+      expect(toasts.toasts()[0].title).toContain(String(UploaderService.BULK_THRESHOLD + 10));
+      expect(toasts.toasts()[0].progress).toBe(0);
+    });
+
+    it('should show the overall progress, throttled, and close the toast when done', async () => {
+      vi.useFakeTimers();
+      const n = UploaderService.BULK_THRESHOLD + 10;
+      service.uploadFiles(many(n));
+      await vi.advanceTimersByTimeAsync(0);
+      // one upload runs at a time at first: finish them one after the other
+      for (let i = 0; i < n; i++) {
+        finish(i);
+        await vi.advanceTimersByTimeAsync(0);
+      }
+      await vi.advanceTimersByTimeAsync(300);
+      expect(toasts.toasts().length).toBe(0);
+      expect(notification.success).toHaveBeenCalled();
+    });
+
+    it('should keep individual toasts for a small batch', async () => {
+      vi.useFakeTimers();
+      service.uploadFiles(many(3));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(toasts.toasts().length).toBe(3);
+    });
+
+    it('should not open a toast per failed file, but report the number', async () => {
+      vi.useFakeTimers();
+      const n = UploaderService.BULK_THRESHOLD + 1;
+      service.uploadFiles(many(n));
+      await vi.advanceTimersByTimeAsync(0);
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      for (let i = 0; i < n; i++) {
+        fail(i);
+        await vi.advanceTimersByTimeAsync(0);
+      }
+      await vi.advanceTimersByTimeAsync(300);
+      expect(toasts.toasts().length).toBe(0);
+      expect(notification.error).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+  });
 });
