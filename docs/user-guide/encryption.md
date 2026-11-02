@@ -70,7 +70,7 @@ There are two ways: from the web UI (easiest), or with a command line tool.
 With Docker, stop the container and run the tool in a one-off container, for example:
 `docker compose run --rm -it --entrypoint node pigallery2 ./src/backend/tools/EncryptGallery --config-path=/app/data/config/config.json --user=<name> --apply`
 
-New uploads are encrypted before they reach the disk.
+New uploads are encrypted before they reach the disk (the `Upload` / `Encrypt new uploads` setting, on by default; if you switch it off, uploads are saved plain until you run `Encrypt media files`).
 Files that are not encrypted yet are still shown, so you can start the server before the tool has finished.
 
 ## Behavior

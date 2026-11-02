@@ -42,7 +42,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1394</context>
+          <context context-type="linenumber">1403</context>
         </context-group>
         <target>Adatbázis</target>
       </trans-unit>
@@ -1278,11 +1278,27 @@
         </context-group>
         <target>Napló</target>
       </trans-unit>
+      <trans-unit id="5412805197859527991" datatype="html">
+        <source>Encrypt new uploads</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
+          <context context-type="linenumber">1361</context>
+        </context-group>
+        <target>Encrypt new uploads</target>
+      </trans-unit>
+      <trans-unit id="6468895754938300959" datatype="html">
+        <source>Encrypts the uploaded files before they are saved, if the gallery is encrypted (Tools / Encrypt media files). If it is off, uploads are saved unencrypted until you run "Encrypt media files".</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
+          <context context-type="linenumber">1364</context>
+        </context-group>
+        <target>Encrypts the uploaded files before they are saved, if the gallery is encrypted (Tools / Encrypt media files). If it is off, uploads are saved unencrypted until you run "Encrypt media files".</target>
+      </trans-unit>
       <trans-unit id="3619951690451500546" datatype="html">
         <source>Scratch folder</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1365</context>
+          <context context-type="linenumber">1374</context>
         </context-group>
         <target>Scratch folder</target>
       </trans-unit>
@@ -1290,7 +1306,7 @@
         <source>Video transcoding needs to write the transcoded video as a plain file before it can be encrypted. It is stored here and deleted right after. Use a RAM disk (e.g.: /dev/shm) to keep it off the disk. Empty means the temp folder of the OS.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1371</context>
+          <context context-type="linenumber">1380</context>
         </context-group>
         <target>Video transcoding needs to write the transcoded video as a plain file before it can be encrypted. It is stored here and deleted right after. Use a RAM disk (e.g.: /dev/shm) to keep it off the disk. Empty means the temp folder of the OS.</target>
       </trans-unit>
@@ -1298,7 +1314,7 @@
         <source>Server</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1385</context>
+          <context context-type="linenumber">1394</context>
         </context-group>
         <target>Szerver</target>
       </trans-unit>
@@ -1306,7 +1322,7 @@
         <source>Users</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1403</context>
+          <context context-type="linenumber">1412</context>
         </context-group>
         <target>Users</target>
       </trans-unit>
@@ -1314,7 +1330,7 @@
         <source>Indexing</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1412</context>
+          <context context-type="linenumber">1421</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/model/backendtext.service.ts</context>
@@ -1326,7 +1342,7 @@
         <source>If you add a new folder to your gallery, the site indexes it automatically.  If you would like to trigger indexing manually, click index button. (Note: search only works among the indexed directories.)</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1417</context>
+          <context context-type="linenumber">1426</context>
         </context-group>
         <target>Ha új mappát ad hozzá a galériához, a webhely automatikusan indexeli. Ha kézzel szeretné indítani az indexelést, kattintson az index gombra. (Megjegyzés: csak az indexelt könyvtárak között működik a keresés.)</target>
       </trans-unit>
@@ -1334,7 +1350,7 @@
         <source>Media</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1429</context>
+          <context context-type="linenumber">1438</context>
         </context-group>
         <target>Media</target>
       </trans-unit>
@@ -1342,7 +1358,7 @@
         <source>Meta file</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1438</context>
+          <context context-type="linenumber">1447</context>
         </context-group>
         <target>Meta fájl</target>
       </trans-unit>
@@ -1350,7 +1366,7 @@
         <source>Album cover</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1447</context>
+          <context context-type="linenumber">1456</context>
         </context-group>
         <target>Album cover</target>
       </trans-unit>
@@ -1358,7 +1374,7 @@
         <source>Specify a search query and sorting that the app can use to pick the best photo for an album and folder cover. There is no way to manually pick folder and album cover in the app. You can tag some of your photos with 'cover' and set that as search query or rate them to 5 and set sorting to descending by rating.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1458</context>
+          <context context-type="linenumber">1467</context>
         </context-group>
         <target>Specify a search query and sorting that the app can use to pick the best photo for an album and folder cover. There is no way to manually pick folder and album cover in the app. You can tag some of your photos with 'cover' and set that as search query or rate them to 5 and set sorting to descending by rating.</target>
       </trans-unit>
@@ -1366,7 +1382,7 @@
         <source>Sharing</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1465</context>
+          <context context-type="linenumber">1474</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/share/share.gallery.component.html</context>
@@ -1386,7 +1402,7 @@
         <source>Duplicates</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1474</context>
+          <context context-type="linenumber">1483</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/duplicates/duplicates.component.ts</context>
@@ -1402,7 +1418,7 @@
         <source>Messaging</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1483</context>
+          <context context-type="linenumber">1492</context>
         </context-group>
         <target>Messaging</target>
       </trans-unit>
@@ -1410,7 +1426,7 @@
         <source>The App can send messages (like photos on the same day a year ago. aka: "Top Pick"). Here you can configure the delivery method.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1487</context>
+          <context context-type="linenumber">1496</context>
         </context-group>
         <target>The App can send messages (like photos on the same day a year ago. aka: "Top Pick"). Here you can configure the delivery method.</target>
       </trans-unit>
@@ -1418,7 +1434,7 @@
         <source>Extensions</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1495</context>
+          <context context-type="linenumber">1504</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/public/ClientConfig.ts</context>
@@ -1430,7 +1446,7 @@
         <source>Upload</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1504</context>
+          <context context-type="linenumber">1513</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/public/ClientConfig.ts</context>
@@ -1446,7 +1462,7 @@
         <source>Encryption</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1513</context>
+          <context context-type="linenumber">1522</context>
         </context-group>
         <target>Encryption</target>
       </trans-unit>
@@ -1454,7 +1470,7 @@
         <source>Jobs</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/common/config/private/PrivateConfig.ts</context>
-          <context context-type="linenumber">1522</context>
+          <context context-type="linenumber">1531</context>
         </context-group>
         <target>Feladatok</target>
       </trans-unit>
@@ -5238,11 +5254,19 @@
         </context-group>
         <target>Auto update gallery</target>
       </trans-unit>
+      <trans-unit id="4178547551184006633" datatype="html">
+        <source>Upload folder</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/frame/frame.component.html</context>
+          <context context-type="linenumber">262</context>
+        </context-group>
+        <target>Upload folder</target>
+      </trans-unit>
       <trans-unit id="4930506384627295710" datatype="html">
         <source>Settings</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/frame/frame.component.html</context>
-          <context context-type="linenumber">268</context>
+          <context context-type="linenumber">276</context>
         </context-group>
         <target>Beállítások</target>
       </trans-unit>
@@ -5250,7 +5274,7 @@
         <source>Logout</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/frame/frame.component.html</context>
-          <context context-type="linenumber">276</context>
+          <context context-type="linenumber">284</context>
         </context-group>
         <target>Kijelentkezés</target>
       </trans-unit>
@@ -6858,19 +6882,19 @@
         </context-group>
         <target>Megosztási link a vágólapra lett másolva</target>
       </trans-unit>
-      <trans-unit id="4969042627845082374" datatype="html">
-        <source>Drop files to upload</source>
+      <trans-unit id="2233837653566740783" datatype="html">
+        <source>Drop files or folders to upload</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.gallery.component.html</context>
           <context context-type="linenumber">7,8</context>
         </context-group>
-        <target>Húzd ide a fájlokat a feltöltéshez</target>
+        <target>Drop files or folders to upload</target>
       </trans-unit>
       <trans-unit id="2673650530090297132" datatype="html">
         <source>Hide details</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">64</context>
+          <context context-type="linenumber">66</context>
         </context-group>
         <target>Részletek elrejtése</target>
       </trans-unit>
@@ -6881,7 +6905,7 @@
         </source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">64</context>
+          <context context-type="linenumber">66</context>
         </context-group>
         <target>
           Uploading files: 
@@ -6895,7 +6919,7 @@
         </source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">65</context>
+          <context context-type="linenumber">67</context>
         </context-group>
         <target>
           Failed: 
@@ -6906,7 +6930,11 @@
         <source>Upload is not supported for this directory.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">96</context>
+          <context context-type="linenumber">103</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
+          <context context-type="linenumber">112</context>
         </context-group>
         <target>A feltöltése nem támogatott ebben a mappában.</target>
       </trans-unit>
@@ -6914,7 +6942,7 @@
         <source>Some files were skipped due to unsupported format.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">109</context>
+          <context context-type="linenumber">122</context>
         </context-group>
         <target>Néhány fájl kimaradt a nem támogatott formátum miatt.</target>
       </trans-unit>
@@ -6922,7 +6950,7 @@
         <source>Queued</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">142</context>
+          <context context-type="linenumber">157</context>
         </context-group>
         <target>sorban</target>
       </trans-unit>
@@ -6933,7 +6961,7 @@
         </source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">162</context>
+          <context context-type="linenumber">178</context>
         </context-group>
         <target>
           Files already exist: 
@@ -6944,7 +6972,11 @@
         <source>File already exists</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">163</context>
+          <context context-type="linenumber">179</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
+          <context context-type="linenumber">272</context>
         </context-group>
         <target>Fájl már létezik</target>
       </trans-unit>
@@ -6952,7 +6984,7 @@
         <source>Upload canceled.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">333</context>
+          <context context-type="linenumber">358</context>
         </context-group>
         <target>Upload canceled.</target>
       </trans-unit>
@@ -6963,7 +6995,7 @@
         </source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">336</context>
+          <context context-type="linenumber">361</context>
         </context-group>
         <target>
           Uploaded files: 
@@ -6974,7 +7006,7 @@
         <source>Upload completed.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">336</context>
+          <context context-type="linenumber">361</context>
         </context-group>
         <target>Feltöltés kész.</target>
       </trans-unit>
@@ -6986,7 +7018,7 @@
         </source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">339</context>
+          <context context-type="linenumber">364</context>
         </context-group>
         <target>
           Uploaded: , failed: 
@@ -6998,7 +7030,7 @@
         <source>Upload completed with errors</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">340</context>
+          <context context-type="linenumber">365</context>
         </context-group>
         <target>Upload completed with errors</target>
       </trans-unit>
@@ -7009,7 +7041,7 @@
         </source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">342</context>
+          <context context-type="linenumber">367</context>
         </context-group>
         <target>
           Failed files: 
@@ -7020,7 +7052,7 @@
         <source>Upload failed.</source>
         <context-group purpose="location">
           <context context-type="sourcefile">src/frontend/app/ui/gallery/uploader/uploader.service.ts</context>
-          <context context-type="linenumber">342</context>
+          <context context-type="linenumber">367</context>
         </context-group>
         <target>Hiba a feltöltés közben.</target>
       </trans-unit>

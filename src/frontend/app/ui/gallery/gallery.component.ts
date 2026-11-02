@@ -33,6 +33,7 @@ import {MediaButtonModalComponent} from './grid/photo/media-button-modal/media-b
 import {ContentWrapperWithError} from '../../../../common/entities/ContentWrapper';
 import {SearchQueryUtils} from '../../../../common/SearchQueryUtils';
 import {UploaderService} from './uploader/uploader.service';
+import {getDroppedRoots} from './uploader/dropped-files';
 import {GalleryService} from './gallery.service';
 import {UploaderComponent} from './uploader/uploader.gallery.component';
 
@@ -210,9 +211,10 @@ export class GalleryComponent implements OnInit, OnDestroy {
       event.preventDefault();
       event.stopPropagation();
       this.isUploadOver = false;
-      const files = event.dataTransfer.files;
-      if (files.length > 0) {
-        this.uploaderService.uploadFiles(files);
+      // folders can only be read during the event
+      const roots = getDroppedRoots(event.dataTransfer);
+      if (roots.files.length > 0 || roots.entries.length > 0) {
+        this.uploaderService.uploadDropped(roots).catch(console.error);
       }
     }
   }

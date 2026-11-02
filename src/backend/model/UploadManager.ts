@@ -16,12 +16,38 @@ export interface UploadError {
 
 export class UploadManager {
 
-  public async saveFiles(directory: string, files: Express.Multer.File[]): Promise<UploadError[]> {
+  private static readonly MAX_FOLDER_DEPTH = 32;
+
+  /**
+   * Checks the folder of an uploaded folder structure (e.g.: "Holiday/Day 1"), that is inside the upload directory.
+   * Returns the normalized path without leading or trailing slashes.
+   */
+  public static sanitizeRelativeDir(relativeDir: string): string {
+    if (!relativeDir) {
+      return '';
+    }
+    const parts = relativeDir.split('/').filter(p => p.length > 0);
+    if (parts.length > UploadManager.MAX_FOLDER_DEPTH) {
+      throw new Error('The folder structure is too deep.');
+    }
+    for (const part of parts) {
+      if (part === '.' || part === '..' || /[\\\0]/.test(part) || part.length > 255) {
+        throw new Error('Invalid folder name: ' + part);
+      }
+    }
+    return parts.join('/');
+  }
+
+  public async saveFiles(directoryIn: string, files: Express.Multer.File[], uploadedFolder = ''): Promise<UploadError[]> {
     if (Config.Upload.enabled === false) {
       throw new Error('Upload is disabled');
     }
-    const relativeDir = directory || '';
+    const directory = directoryIn || '';
+    const relativeDir = directory;
     const fullDirPath = path.join(ProjectPath.ImageFolder, relativeDir);
+    // the target of the files, it can be a new folder inside the upload directory
+    const folder = UploadManager.sanitizeRelativeDir(uploadedFolder);
+    const targetDirectory = folder ? path.join(directory, folder) : directory;
 
     if (Config.Upload.enforcedDirectoryConfig === true) {
       const hasUploadConf = Object.keys(PG2ConfMap.upload).some(filename => {
@@ -36,7 +62,7 @@ export class UploadManager {
     const errors: UploadError[] = [];
     for (const file of files) {
       try {
-        await this.saveFile(directory, file);
+        await this.saveFile(targetDirectory, file);
       } catch (e) {
         errors.push({filename: file.originalname, error: e.message});
       }
@@ -77,7 +103,11 @@ export class UploadManager {
       await fs.promises.mkdir(fullDirPath, {recursive: true});
     }
 
-    // encrypted before it reaches the disk, if encryption is enabled
+    if (Config.Upload.encryptNewUploads === false) {
+      await fs.promises.writeFile(fullFilePath, file.buffer);
+      return;
+    }
+    // encrypted before it reaches the disk, if the gallery is encrypted
     await EncryptionManager.writeFile(fullFilePath, file.buffer);
   }
 }

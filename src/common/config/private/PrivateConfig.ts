@@ -1353,8 +1353,17 @@ export class ServerEnvironmentConfig {
 }
 
 
-@SubConfigClass({softReadonly: true})
+@SubConfigClass<TAGS>({softReadonly: true})
 export class ServerUploadConfig extends ClientUploadConfig {
+  @ConfigProperty({
+    type: 'boolean',
+    tags: {
+      name: $localize`Encrypt new uploads`,
+      priority: ConfigPriority.basic,
+    } as TAGS,
+    description: $localize`Encrypts the uploaded files before they are saved, if the gallery is encrypted (Tools / Encrypt media files). If it is off, uploads are saved unencrypted until you run "Encrypt media files".`
+  })
+  encryptNewUploads: boolean = true;
 }
 
 @SubConfigClass<TAGS>({softReadonly: true})

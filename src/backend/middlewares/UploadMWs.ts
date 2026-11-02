@@ -24,7 +24,9 @@ export class UploadMWs {
 
       try {
         const directory = req.params['directory'] || '';
-        req.resultPipe = await ObjectManagers.getInstance().UploadManager.saveFiles(directory, files);
+        // folder uploads: the folder of the files inside the directory (e.g.: "Holiday/Day 1")
+        const relativeDir = typeof req.body?.relativeDir === 'string' ? req.body.relativeDir : '';
+        req.resultPipe = await ObjectManagers.getInstance().UploadManager.saveFiles(directory, files, relativeDir);
         return next();
       } catch (e) {
         return next(new ErrorDTO(ErrorCodes.UPLOAD_ERROR, e.message || e));

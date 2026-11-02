@@ -247,4 +247,65 @@ describe('UploadManager', () => {
       EncryptionManager.setKeyForTesting(null);
     }
   });
+
+  describe('folders', () => {
+    const f = (name: string, content = 'content'): any => ({originalname: name, buffer: Buffer.from(content)});
+
+    afterEach(() => {
+      Config.Upload.encryptNewUploads = true;
+      EncryptionManager.setKeyForTesting(null);
+    });
+
+    it('should create the folder structure, like creating the folders by hand', async () => {
+      const errors = await uploadManager.saveFiles('folders_a', [f('1.jpg')], 'Holiday/Day 1');
+      expect(errors).to.deep.equal([]);
+      expect(fs.readFileSync(path.join(testDir, 'folders_a', 'Holiday', 'Day 1', '1.jpg'), 'utf8')).to.equal('content');
+    });
+
+    it('should merge into an existing folder and not overwrite existing files', async () => {
+      await uploadManager.saveFiles('folders_b', [f('1.jpg', 'old')], 'Trip');
+      const errors = await uploadManager.saveFiles('folders_b', [f('1.jpg', 'new'), f('2.jpg', 'two')], 'Trip');
+      expect(errors.length).to.equal(1);
+      expect(errors[0].error).to.contain('already exists');
+      expect(fs.readFileSync(path.join(testDir, 'folders_b', 'Trip', '1.jpg'), 'utf8')).to.equal('old');
+      expect(fs.readFileSync(path.join(testDir, 'folders_b', 'Trip', '2.jpg'), 'utf8')).to.equal('two');
+    });
+
+    it('should refuse folders that would leave the upload directory', async () => {
+      for (const bad of ['..', '../x', 'a/../../x', 'a/./b', 'a\\b']) {
+        let message = '';
+        await uploadManager.saveFiles('folders_c', [f('evil.jpg')], bad).catch((e) => message = e.message);
+        expect(message, bad).to.contain('Invalid folder name');
+      }
+      expect(fs.existsSync(path.join(testDir, 'evil.jpg'))).to.be.false;
+      expect(fs.existsSync(path.join(testDir, 'x'))).to.be.false;
+    });
+
+    it('should ignore leading, trailing and doubled slashes', () => {
+      expect(UploadManager.sanitizeRelativeDir('/a//b/')).to.equal('a/b');
+      expect(UploadManager.sanitizeRelativeDir('')).to.equal('');
+    });
+
+    it('should encrypt uploads in folders when the gallery is encrypted', async () => {
+      EncryptionManager.setKeyForTesting(Buffer.alloc(32, 7));
+      await uploadManager.saveFiles('folders_d', [f('s.jpg', 'secret')], 'Priv');
+      const p = path.join(testDir, 'folders_d', 'Priv', 's.jpg');
+      expect(await EncryptionManager.isEncrypted(p)).to.be.true;
+      expect((await EncryptionManager.readFile(p)).toString()).to.equal('secret');
+    });
+
+    it('should store uploads plain when "Encrypt new uploads" is off', async () => {
+      EncryptionManager.setKeyForTesting(Buffer.alloc(32, 7));
+      Config.Upload.encryptNewUploads = false;
+      await uploadManager.saveFiles('folders_e', [f('p.jpg', 'plain text')]);
+      const p = path.join(testDir, 'folders_e', 'p.jpg');
+      expect(await EncryptionManager.isEncrypted(p)).to.be.false;
+      expect(fs.readFileSync(p, 'utf8')).to.equal('plain text');
+    });
+
+    it('should leave the option without effect when the gallery is not encrypted', async () => {
+      await uploadManager.saveFiles('folders_f', [f('p.jpg', 'x')]);
+      expect(await EncryptionManager.isEncrypted(path.join(testDir, 'folders_f', 'p.jpg'))).to.be.false;
+    });
+  });
 });

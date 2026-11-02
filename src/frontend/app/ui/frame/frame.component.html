@@ -256,6 +256,14 @@
                             (change)="uploadService.uploadFiles(uploadInput.files); uploadInput.value = ''">
                           </a>
                         </li>
+                        <li role="menuitem">
+                          <a class="dropdown-item cursor-pointer" (click)="uploadFolderInput.click()">
+                            <ng-icon name="ionCloudUploadOutline" />
+                            <ng-container i18n>Upload folder</ng-container>
+                            <input #uploadFolderInput type="file" webkitdirectory [style.display]="'none'"
+                              (change)="uploadService.uploadEntries(entriesFromPicker(uploadFolderInput.files)); uploadFolderInput.value = ''">
+                          </a>
+                        </li>
                       }
                       @if (isAdmin()) {
                         <li role="menuitem">
