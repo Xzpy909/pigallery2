@@ -270,7 +270,8 @@ a {
 
 .select-button.checked {
   color: var(--bs-primary, #0d6efd);
-  background: white;
+  /* white disc only behind the check mark, so it does not peek out around the icon's own circle */
+  background: radial-gradient(circle, #fff 0 55%, transparent 56%);
   filter: none;
 }
 
